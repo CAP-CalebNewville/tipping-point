@@ -11,17 +11,13 @@ Pilots visit an equally intuitive web interface, choose their tail number, and p
 The current software version is 1.0.1 (released 20 Apr 2020). View the changelog for release history.
 
 ## Project Screenshots
+*Screenshots are still being migrated*
 
-Screenshot thumbnail
 1. Pilot interface (calculation screen)
-Screenshot thumbnail
-5. User editor
-Screenshot thumbnail
-4. Users list
-Screenshot thumbnail
-2. Aircraft editor
-Screenshot thumbnail
-3. System configuration
+1. User editor
+1. Users list
+1. Aircraft editor
+1. System configuration
 
 ## Features
 - Multiple aircraft
