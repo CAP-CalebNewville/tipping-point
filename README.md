@@ -1,5 +1,6 @@
 TippingPoint - Aircraft Weight & Balance
 http://sourceforge.net/p/tippingpoint
+v0.9.2 - 30 Nov 2011
 ========================================
 
 Tipping point is a web-based aircraft weight and balance calculator with
@@ -8,7 +9,7 @@ requires PHP and MySQL, and utilizes the pChart graphing library.
 
 ========================================
 
-This is a final pre-production release.
+This is a pre-production release.
 
 Things we would like to add in the future:
 * Multiple organizations (with aircraft) from a single install
@@ -21,12 +22,13 @@ Things we would like to add in the future:
 ========================================
 
 To Install:
-1) Download the code and SQL file
-2) Use the SQL file to create to create the blank database
-3) Manually add a user account to the "users" table in the database,
-   leave the password field blank
-4) Extract the code
-5) Edit "func.inc", fill in your MySQL server information
+1) Download the code
+2) Extract the archive to your webserver
+3) Use "tippingpoint.sql" in the archive to create the blank database
+4) Edit "func.inc", fill in your MySQL server information
+5) Visit http://yourserver/TippingPoint/admin.php -- login with user "admin" and no password
+6) Visit the "Edit Users" section and create a more secure user account
+7) Visit the "Edit System Settings"
 
 ========================================
 
