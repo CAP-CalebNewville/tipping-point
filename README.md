@@ -1,6 +1,6 @@
 TippingPoint - Aircraft Weight & Balance
-http://sourceforge.net/p/tippingpoint
-v0.9.3 - 03 Dec 2011
+http://www.TippingPointTool.com
+v0.9.4 - 04 Feb 2012
 ========================================
 
 ##Overview##
@@ -10,7 +10,7 @@ TippingPoint is ideal for flying clubs, flight schools, FBOs or even individuals
 
 Pilots visit an equally intuitive web interface, choose their tail number, and plug in their weights.  The entire preflight weight and balance can be completed in under a minute.
 
-The current software version is 0.9.3.  View the [changelog](http://tippingpoint.sourceforge.net/changelog.txt) for release history.
+The current software version is 0.9.4 (released 04 Feb 2012).  View the [changelog](http://tippingpoint.sourceforge.net/changelog.txt) for release history.
 
 ##Requirements##
 * A web server with PHP 5
@@ -24,17 +24,15 @@ The current software version is 0.9.3.  View the [changelog](http://tippingpoint
 4. Visit http://yourserver/TippingPoint/setup.php
 
 ##Upgrading##
-From version 0.9.2 or earlier
+From version 0.9.3 (if you are not running 0.9.3, upgrade to that version first)
 1. Extract the archive to your webserver
 2. Visit http://yourserver/TippingPoint/upgrade.php
 
 ##Download##
-[Download version 0.9.3](https://sourceforge.net/projects/tippingpoint/files/TippingPoint-0.9.3/)
+[Download version 0.9.4](https://sourceforge.net/projects/tippingpoint/files/TippingPoint-0.9.4/) Released 04 Feb 2012.
 
 ##Future Improvements##
-* Multiple organizations (with aircraft) from a single install
 * Multiple weight envelopes on the graph (ie: normal category, utility category)
-* Takeoff AND landing calculations
 * "e-file" weight and balance (no printing and signing)
 
 ##Contributing##
