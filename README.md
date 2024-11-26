@@ -1,43 +1,45 @@
 TippingPoint - Aircraft Weight & Balance
 http://sourceforge.net/p/tippingpoint
-v0.9.2 - 30 Nov 2011
+v0.9.3 - 03 Dec 2011
 ========================================
 
-Tipping point is a web-based aircraft weight and balance calculator with
-graphing. It has support for multiple aircraft and administrators. The software
-requires PHP and MySQL, and utilizes the pChart graphing library.
+##Overview##
+TippingPoint is a web-based aircraft weight and balance calculator with graphing. It has support for multiple aircraft and administrators.
 
-========================================
+TippingPoint is ideal for flying clubs, flight schools, FBOs or even individuals.  The administrator (owner/mechanic/operations officer/etc) defines the aircraft configuration using a simple web interface.
 
-This is a pre-production release.
+Pilots visit an equally intuitive web interface, choose their tail number, and plug in their weights.  The entire preflight weight and balance can be completed in under a minute.
 
-Things we would like to add in the future:
+The current software version is 0.9.3.  View the [changelog](http://tippingpoint.sourceforge.net/changelog.txt) for release history.
+
+##Requirements##
+* A web server with PHP 5
+* MySQL
+* Compliance with pChart [licensing terms](http://www.pchart.net/license)
+
+##Installation##
+1. Download the code
+2. Extract the archive to your webserver
+3. Create an empty MySQL database, and a database username and password
+4. Visit http://yourserver/TippingPoint/setup.php
+
+##Upgrading##
+From version 0.9.2 or earlier
+1. Extract the archive to your webserver
+2. Visit http://yourserver/TippingPoint/upgrade.php
+
+##Download##
+[Download version 0.9.3](https://sourceforge.net/projects/tippingpoint/files/TippingPoint-0.9.3/)
+
+##Future Improvements##
 * Multiple organizations (with aircraft) from a single install
-* Automated installer
-	- Genericize database
-* Code cleanup
 * Multiple weight envelopes on the graph (ie: normal category, utility category)
+* Takeoff AND landing calculations
 * "e-file" weight and balance (no printing and signing)
 
-========================================
+##Contributing##
+If you find a bug, feature request or other suggestion, please submit it using the [tickets](https://sourceforge.net/p/tippingpoint/tickets/) link above.
+If you would like to contribute to the source code, please e-mail: <caleb@inetwiz.com>
 
-To Install:
-1) Download the code
-2) Extract the archive to your webserver
-3) Use "tippingpoint.sql" in the archive to create the blank database
-4) Edit "func.inc", fill in your MySQL server information
-5) Visit http://yourserver/TippingPoint/admin.php -- login with user "admin" and no password
-6) Visit the "Edit Users" section and create a more secure user account
-7) Visit the "Edit System Settings"
-
-========================================
-
-Notes:
-This software utilizes the pChart graphing library, ensure that you comply
-with the license terms of their software: http://www.pchart.net/license
-
-========================================
-
-Feedback/Contributing:
-Please submit bugs, code improvements or other feedback on the project's
-SourceForge site: http://sourceforge.net/p/tippingpoint
+##Donations##
+If you would like to "tip" the developer, you may do so via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=34CMYSQG2R49Y).
