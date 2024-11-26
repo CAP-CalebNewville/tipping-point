@@ -1,0 +1,73 @@
++--------------------------------------------------------+
+| TippingPoint - Open Source Weight & Balance Calculator |
+|          http://tippingpoint.sourceforge.net           |
+|                                                        |
+|         By Caleb Newville <caleb@inetwiz.com>          |
++--------------------------------------------------------+
+
+* Bug Fix
++ Feature addition
+- Feature removal
+
+v1.0.1 25 Apr 2020
+==================
+* Fixed password creation during initial setup.
+
+v1.0.0 24 Apr 2020
+==================
+* PHP v7 compatibility
+* Changed database connection engine from mysql to mysqli
+* Removed obsolete/nonfunctional pChart library, changed to Google Charts library
+* Various coding syntax updates
+* Enhanced setup process
+* Numerous bugfixes throughout
+* Improved security of user/password management.
+
+v0.9.4 04 Feb 2012
+==================
+* Click CG graph to enlarge to full 8.5x11 size for more detail
+* Show an error message if an invalid or inactive aircraft is selected
+* Changed references to $_ENV["HTTP_HOST"] to $_SERVER["SERVER_NAME"] (mainly for
+  compatibility with Windows hosts)
+* Added error handling if cannot connect to MySQL server or database
+* Now passes current HTML5 and CSS validation
+* Passwords now stored using MD5 encryption
++ Allow for selecting of fuel unit (gallons, liters, pounds)
++ Separate calculations for takeoff and landing
+
+v0.9.3 03 Dec 2011
+==================
+* Aircraft last updated showing wrong date
+* Aircraft last updated uses server timezone instead of local timezone
+* Changed plotted weight color to green for takeoff, in anticipation of adding a
+  future landing weight (red)
++ Created installation script "setup.php" for initial setup
++ Added update checker, administrators will be notified when a new version of
+  TippingPoint is available
++ Aircraft duplication function
+
+v0.9.2 30 Nov 2011
+==================
+* Fixed error with link when adding aircraft with same tailnumber
+* Altered footer text and fixed error in footer e-mail link
+* The query to add a new aircraft expressly referenced the database
+* Error with timezone variable capitalization
+* Renamed wtbal.php to index.php
+* Security issue where the database username and password could be read
+* Calculate button doesn't save weights
++ Added "aircraft last updated" so user knows how current data is
+
+v0.9.1 03 Nov 2011
+==================
+* Bug fixes
+
+v0.9.0 31 Oct 2011
+==================
+* Feature complete
++ Multi-aircraft
++ Admin interface
+
+v0.8.0 25 Oct 2011
+==================
++ Initial functional demo release
++ Single aircraft
