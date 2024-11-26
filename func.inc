@@ -10,7 +10,7 @@ $con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysql_error());
 
 $config_result = mysqli_query($con,"SELECT * FROM `configuration`;");
 while($config_row = mysqli_fetch_assoc($config_result)) {
-  $config{$config_row['item']}=$config_row['value'];
+  $config[$config_row['item']]=$config_row['value'];
 }
 
 
