@@ -142,7 +142,7 @@ if  (parseFloat(Math.round(totwt_to))>w1) {
         var message = "\nBased on the provided data,\n"
             message += "this aircraft will be overweight at takeoff!\n"
        alert(message + "By " + overt + " lbs. ")
-        inuse_flag = false
+        inuse_flag = false;
     }
 
 if  (parseFloat(Math.round(totarm_to*100)/100)>c2) {
@@ -152,7 +152,7 @@ if  (parseFloat(Math.round(totarm_to*100)/100)>c2) {
         message += "CG limitations as it applies to the\n"
         message += "weight and category of your flight.\n"
         alert(message)
-        inuse_flag = false
+        inuse_flag = false;
     }
 
 if  ( (parseFloat(Math.round(totarm_to*100)/100)>c2)&&
@@ -165,7 +165,7 @@ if  ( (parseFloat(Math.round(totarm_to*100)/100)>c2)&&
         message += "CG limitations as it applies to the\n"
         message += "weight and category of your flight.\n"
         alert(message)
-        inuse_flag = false
+        inuse_flag = false;
     }
 
 if  (parseFloat(Math.round(totarm_to*100)/100)<c1) {
@@ -175,7 +175,7 @@ if  (parseFloat(Math.round(totarm_to*100)/100)<c1) {
         message += "CG limitations as it applies to the\n"
         message += "weight and category of your flight.\n"
         alert(message)
-        inuse_flag = false
+        inuse_flag = false;
     }
  }
 // -->

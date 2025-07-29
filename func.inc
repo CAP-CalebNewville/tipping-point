@@ -105,7 +105,7 @@ function AircraftListActive() {
   require 'config.inc';
   $con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysqli_error($con));
 	echo "<select name=\"tailnumber\">\n";
-	$result = mysqli_query($con,"SELECT * FROM `aircraft` WHERE `active` = 1 ORDER BY 'tailnumber' ASC;");
+	$result = mysqli_query($con,"SELECT * FROM `aircraft` WHERE `active` = 1 ORDER BY `tailnumber` ASC;");
 	while($row = mysqli_fetch_array($result)) {
 		echo "<option value=\"" . $row['id'] . "\">" . $row['tailnumber'] . " - " . $row['makemodel'] . "</option>\n";
 	}
@@ -117,13 +117,13 @@ function AircraftListAll() {
   $con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysqli_error($con));
 	echo "<select name=\"tailnumber\">\n";
 	echo "<optgroup label=\"Active\">\n";
-	$result = mysqli_query($con,"SELECT * FROM `aircraft` WHERE `active` = 1 ORDER BY 'tailnumber' ASC;");
+	$result = mysqli_query($con,"SELECT * FROM `aircraft` WHERE `active` = 1 ORDER BY `tailnumber` ASC;");
 	while($row = mysqli_fetch_array($result)) {
 		echo "<option value=\"" . $row['id'] . "\">" . $row['tailnumber'] . " - " . $row['makemodel'] . "</option>\n";
 	}
 	echo "</optgroup>\n";
 	echo "<optgroup label=\"Inactive\">\n";
-	$result = mysqli_query($con,"SELECT * FROM `aircraft` WHERE `active` = 0 ORDER BY 'tailnumber' ASC;");
+	$result = mysqli_query($con,"SELECT * FROM `aircraft` WHERE `active` = 0 ORDER BY `tailnumber` ASC;");
 	while($row = mysqli_fetch_array($result)) {
 		echo "<option value=\"" . $row['id'] . "\">" . $row['tailnumber'] . " - " . $row['makemodel'] . "</option>\n";
 	}

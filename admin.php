@@ -407,6 +407,7 @@ switch ($_REQUEST["func"]) {
 					$aircraft = mysqli_fetch_assoc($aircraft_query);
 					mysqli_query($con,"INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, '" . $loginuser . "', '" . $aircraft['tailnumber'] . ": " . addslashes($sql_query) . "');");
 					header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+					break;
 				case "loading":
 					if ($_REQUEST['new_item'] && $_REQUEST['new_arm'] != "") {
 						// SQL query to add a new loading line

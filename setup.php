@@ -119,7 +119,7 @@ if (file_exists("config.inc") && $_REQUEST['func']=="") {
 		.    "<tr><td align=\"right\">Database Name</td><td><input type=\"text\" name=\"dbname\" value=\"tippingpoint\"></td></tr>\n"
 		.    "<tr><td align=\"right\">Database Username</td><td><input type=\"text\" name=\"dbuser\"></td></tr>\n"
 		.    "<tr><td align=\"right\">Database Password</td><td><input type=\"text\" name=\"dbpass\"></td></tr>\n"
-		.    "<td colspan=\"2\" align=\"center\"><input type=\"submit\" value=\"Step 2\"></td></tr>\n"
+		.    "<tr><td colspan=\"2\" align=\"center\"><input type=\"submit\" value=\"Step 2\"></td></tr>\n"
 		.    "</table></form>\n\n"
 		);
 	}
