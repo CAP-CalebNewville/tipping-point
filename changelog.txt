@@ -9,9 +9,10 @@
 + Feature addition
 - Feature removal
 
-v1.1.1 XX XXX 2025
+v1.2.0 30 Jul 2025
 ==================
 * Numerous small bug fixes
++ Restyled the admin page using a modern Bootstrap design
 
 v1.1.0 28 Jul 2025
 ==================

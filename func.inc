@@ -2,7 +2,7 @@
 require 'config.inc';
 
 /* VARIABLES */
-$ver = "1.1.0";
+$ver = "1.2.0";
 $tabindex=1;
 
 $con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysqli_error($con));
@@ -15,38 +15,44 @@ while($config_row = mysqli_fetch_assoc($config_result)) {
 
 
 function PageHeader($site_name) {
-	ob_start();
 	?>
 	<!DOCTYPE HTML>
-	<html>
+	<html data-bs-theme="auto">
 	<head>
 	<title>TippingPoint - <?php echo($site_name); ?></title>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 	<style type="text/css">
 	<!--
-	body {background-color:#FFFFFF; font-family: Cambria, Tahoma, Verdana; font-size: 14px;}
-	input, select {font-family: Cambria, Tahoma, Verdana; font-size: 11px; border:1px solid #AAAAAA;}
-	table, th, td {border: 1px solid black; border-collapse:collapse; padding:3px;}
-	th {background-color: #4F81BD; text-align: center;}
-	tr:nth-child(odd) {background-color: #FFFFFF;}
-	tr:nth-child(even) {background-color: #EEEEEE;}
-	abbr {border-bottom: 1px dashed; cursor: help;}
-	.titletext {color: #17365D; font-size: 24px;}
+	body {padding-top: 60px;} /* Space for fixed navbar */
 	.readonly {background-color: #CCCCCC;}
 	.numbers {text-align: right; width: 70px;}
 	.numbergals {text-align: right; width: 40px;}
-	@media print { .noprint { display: none; } }
-	#toolbar
-		{width: 900px; left: 0px; right: 0px; height: 35px; position:fixed; bottom:0px; margin-right: auto; margin-left: auto; z-index:100; background-color: #800000; color: white;
-		background-image: linear-gradient(bottom, rgb(128,0,0) 75%, rgb(128,0,0) 62%, rgb(255,255,255) 81%);
-		background-image: -o-linear-gradient(bottom, rgb(128,0,0) 75%, rgb(128,0,0) 62%, rgb(255,255,255) 81%);
-		background-image: -moz-linear-gradient(bottom, rgb(128,0,0) 75%, rgb(128,0,0) 62%, rgb(255,255,255) 81%);
-		background-image: -webkit-linear-gradient(bottom, rgb(128,0,0) 75%, rgb(128,0,0) 62%, rgb(255,255,255) 81%);
-		background-image: -ms-linear-gradient(bottom, rgb(128,0,0) 75%, rgb(128,0,0) 62%, rgb(255,255,255) 81%);
-		background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0.75, rgb(128,0,0)), color-stop(0.62, rgb(128,0,0)), color-stop(0.81, rgb(255,255,255)));
+	@media print { .noprint { display: none; } body {padding-top: 0;} }
+	
+	/* Custom table styling for compatibility */
+	.admin-table {
+		border: 1px solid #dee2e6;
+		border-collapse: collapse;
 	}
-	#toolbar a:link, #toolbar a:visited, #toolbar a:hover {color: yellow; text-decoration: none;}
+	.admin-table th, .admin-table td {
+		border: 1px solid #dee2e6;
+		padding: 8px;
+	}
+	.admin-table th {
+		background-color: #4F81BD;
+		color: white;
+		text-align: center;
+	}
+	.admin-table tr:nth-child(odd) {
+		background-color: #FFFFFF;
+	}
+	.admin-table tr:nth-child(even) {
+		background-color: #f8f9fa;
+	}
 	-->
 	</style>
 	<?php
@@ -59,11 +65,10 @@ function PageFooter($site_name,$admin,$ver) {
 	<div style="height: 20px;"></div>
 	</body></html>
 	<?php
-	ob_end_flush();
 }
 
 function TimezoneList($str) {
-	echo("<select id=\"timezone\" name=\"timezone\">");
+	echo("<select id=\"timezone\" name=\"timezone\" class=\"form-select\">");
 	$timezone_identifiers = DateTimeZone::listIdentifiers();
 	foreach( $timezone_identifiers as $value ){
 		if ( preg_match('/^(America|Antartica|Arctic|Asia|Atlantic|Europe|Indian|Pacific)\//', $value ) ){
@@ -104,7 +109,7 @@ date_default_timezone_set($config['timezone']);
 function AircraftListActive() {
   require 'config.inc';
   $con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysqli_error($con));
-	echo "<select name=\"tailnumber\">\n";
+	echo "<select name=\"tailnumber\" class=\"form-select\">\n";
 	$result = mysqli_query($con,"SELECT * FROM `aircraft` WHERE `active` = 1 ORDER BY `tailnumber` ASC;");
 	while($row = mysqli_fetch_array($result)) {
 		echo "<option value=\"" . $row['id'] . "\">" . $row['tailnumber'] . " - " . $row['makemodel'] . "</option>\n";
@@ -115,7 +120,7 @@ function AircraftListActive() {
 function AircraftListAll() {
   require 'config.inc';
   $con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysqli_error($con));
-	echo "<select name=\"tailnumber\">\n";
+	echo "<select name=\"tailnumber\" class=\"form-select\">\n";
 	echo "<optgroup label=\"Active\">\n";
 	$result = mysqli_query($con,"SELECT * FROM `aircraft` WHERE `active` = 1 ORDER BY `tailnumber` ASC;");
 	while($row = mysqli_fetch_array($result)) {
