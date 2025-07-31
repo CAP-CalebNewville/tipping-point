@@ -1,22 +1,183 @@
-<?php include 'func.inc';
-   PageHeader($config['site_name']); ?>
+<?php 
+// Check if system is set up before trying to load database-dependent functions
+if (!file_exists('config.inc')) {
+    // System not set up, redirect to setup
+    include 'common.inc';
+    PageHeader('Setup Required');
+    ?>
+    <style>
+    /* Override navbar padding for main interface */
+    body { padding-top: 0 !important; }
+    </style>
+    
+    <body>
+    <div class="container">
+    <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+    <div class="card mt-4">
+    <div class="card-header bg-warning text-dark text-center">
+    <h3 class="mb-0">Setup Required</h3>
+    </div>
+    <div class="card-body text-center">
+    <div class="alert alert-warning">
+    <h5 class="alert-heading">TippingPoint Not Configured</h5>
+    <p>TippingPoint has not been set up yet. Please run the initial setup to configure your database and create an administrator account.</p>
+    <hr>
+    <a href="setup.php" class="btn btn-primary">Start Setup</a>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    
+    <?php
+    PageFooter('TippingPoint Setup', 'setup@tippingpoint', $ver);
+    exit;
+}
+
+// System is set up, proceed normally
+include 'func.inc';
+PageHeader($config['site_name']); ?>
+<style>
+/* Override navbar padding for main interface */
+body { padding-top: 0 !important; }
+
+/* Print-specific styles for full width layout */
+@media print {
+  @page {
+    size: Letter;
+    margin: 0.25in;
+  }
+  
+  html, body {
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+  
+  .container {
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    flex: 1 !important;
+  }
+  .col-lg-10, .col-xl-8 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    height: 100% !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .card-body {
+    padding: 0 !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Scale content to fit */
+  .table-responsive {
+    transform-origin: top left !important;
+    transform: scale(0.82) !important;
+    width: 122% !important;
+  }
+  
+  /* Scale the chart iframe and reduce spacing */
+  #wbimage {
+    transform: scale(0.8) !important;
+    transform-origin: center !important;
+    margin: -30px auto -20px auto !important;
+    height: 320px !important;
+    width: 100% !important;
+    max-width: 700px !important;
+    overflow: hidden !important;
+  }
+  
+  /* Reduce spacing around chart container */
+  .mt-4 {
+    margin-top: 0.5rem !important;
+  }
+  
+  /* Ensure signature box fits */
+  .alert-info {
+    margin-bottom: 0 !important;
+    padding: 0.5rem !important;
+    font-size: 0.85em !important;
+  }
+  /* Ensure noprint elements are hidden */
+  .noprint {
+    display: none !important;
+  }
+  
+  /* Hide form inputs and show values as text */
+  input[type="number"] {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-weight: inherit !important;
+    text-align: inherit !important;
+  }
+  
+  /* Make readonly inputs look like regular text */
+  input[readonly] {
+    background: transparent !important;
+    border: none !important;
+  }
+}
+</style>
 
 <?php
 if ($_REQUEST['tailnumber']=="") {
 // NO AIRCRAFT SPECIFIED, SHOW ACTIVE AIRCRAFT LIST
 	echo "<body>\n";
-	echo "<table border=\"1\" cellpadding=\"3\" width=\"700\" align=\"center\">\n";
-	echo "<tr><td>\n";
-	echo "<div class=\"titletext\">" . $config['site_name'] . "</div>\n";
-	if ($_REQUEST['message']=="invalid") { echo "<p style=\"color: #00AA00; text-align: center;\">You have selected an invalid aircraft.</p>\n\n";
-        } elseif ($_REQUEST['message']=="inactive") { echo "<p style=\"color: #00AA00; text-align: center;\">The aircraft you have selected is currently inactive.</p>\n\n"; }
-	echo "<p>Select aircraft tail number.</p>\n";
+	echo "<div class=\"container\">\n";
+	echo "<div class=\"row justify-content-center\">\n";
+	echo "<div class=\"col-lg-6 col-md-8\">\n";
+	echo "<div class=\"card mt-4\">\n";
+	echo "<div class=\"card-header bg-primary text-white text-center\">\n";
+	echo "<h3 class=\"mb-0\">" . $config['site_name'] . "</h3>\n";
+	echo "</div>\n";
+	echo "<div class=\"card-body\">\n";
+	if ($_REQUEST['message']=="invalid") { echo "<div class=\"alert alert-warning text-center\">You have selected an invalid aircraft.</div>\n\n";
+        } elseif ($_REQUEST['message']=="inactive") { echo "<div class=\"alert alert-warning text-center\">The aircraft you have selected is currently inactive.</div>\n\n"; }
+	echo "<h5 class=\"card-title\">Select Aircraft</h5>\n";
+	echo "<p class=\"text-muted\">Choose an aircraft to perform weight and balance calculations.</p>\n";
 
 	echo "<form method=\"get\" action=\"index.php\">\n";
+	echo "<div class=\"mb-3\">\n";
+	echo "<label for=\"tailnumber\" class=\"form-label\">Aircraft</label>\n";
 	AircraftListActive();
-	echo "<input type=\"submit\" value=\"Go\"></form>\n";
+	echo "</div>\n";
+	echo "<div class=\"d-grid\">\n";
+	echo "<button type=\"submit\" class=\"btn btn-primary\">Continue</button>\n";
+	echo "</div>\n";
+	echo "</form>\n";
 
-	echo "</td></tr></table>\n";
+	echo "</div>\n";
+	echo "</div>\n";
+	echo "</div>\n";
+	echo "</div>\n";
+	echo "</div>\n";
 
 } else {
 // TAILNUMBER PROVIDED, VALIDATE
@@ -191,27 +352,53 @@ isamap[3] = "_dn"
 
 <body onload="WeightBal();">
 
-<form method="get" action="index.php"><input type="hidden" name="tailnumber" value="<?php echo($aircraft['id']); ?>">
-<table style="width:700px; margin-left:auto; margin-right:auto;">
-<tr>
-	<td colspan="4" rowspan="6">
-
-<?php echo "<div class=\"titletext\">" . $config['site_name'] . "<br>" . $aircraft['makemodel'] . " " . $aircraft['tailnumber'] . "</div>";
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-10 col-xl-8">
+<div class="card mt-4">
+<div class="card-header bg-primary text-white">
+<div class="row align-items-center">
+<div class="col-md-8">
+<?php echo "<h4 class=\"mb-0\">" . $config['site_name'] . "</h4>";
+echo "<h5 class=\"mb-0 text-light\">" . $aircraft['makemodel'] . " " . $aircraft['tailnumber'] . "</h5>";
 	$updated_query = mysqli_query($con,"SELECT `timestamp` FROM `audit` WHERE `what` LIKE '%" . $aircraft['tailnumber'] . "%' ORDER BY `timestamp` DESC LIMIT 1");
 	$updated = mysqli_fetch_assoc($updated_query);
-	echo "Aircraft last updated: " . date("j M Y",strtotime($updated['timestamp'])-$timezoneoffset) . "<br>\n";
+	echo "<small class=\"text-light\">Aircraft last updated: " . date("j M Y",strtotime($updated['timestamp'])-$timezoneoffset) . "</small>";
 	?>
+</div>
+<div class="col-md-4 text-end">
+<div class="row text-center">
+<div class="col-4">
+<small class="text-light d-block">Empty Wt</small>
+<strong><?php echo $aircraft['emptywt']; ?></strong>
+</div>
+<div class="col-4">
+<small class="text-light d-block">Empty CG</small>
+<strong><?php echo $aircraft['emptycg']; ?></strong>
+</div>
+<div class="col-4">
+<small class="text-light d-block">MGW</small>
+<strong><?php echo $aircraft['maxwt']; ?></strong>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="card-body">
 
-<p><b>PILOT SIGNATURE  X__________________________________________________</b><br>
-The Pilot In Command is responsible for ensuring all calculations are correct.<br>
-<?php echo date("D, j M Y H:i:s T"); ?></p>
-</td>
+<form method="get" action="index.php"><input type="hidden" name="tailnumber" value="<?php echo($aircraft['id']); ?>">
 
-<th>Empty Wt</th></tr><tr><td style="text-align: center;"><?php echo $aircraft['emptywt']; ?></td></tr>
-<tr><th>Empty CG</th></tr><tr><td style="text-align: center;"><?php echo $aircraft['emptycg']; ?></td></tr>
-<tr><th>MGW</th></tr><tr><td style="text-align: center;"><?php echo $aircraft['maxwt']; ?></td></tr>
-
-<tr><th style="width:385px" colspan="2">Item</th><th style="width:105px">Weight</th><th style="width:105px">Arm</th><th style="width:105px">Moment</th></tr>
+<div class="table-responsive">
+<table class="table table-sm table-bordered">
+<thead class="table-primary">
+<tr>
+<th style="width:35%" colspan="2">Item</th>
+<th style="width:25%" class="text-center">Weight</th>
+<th style="width:20%" class="text-center">Arm</th>
+<th style="width:20%" class="text-center">Moment</th>
+</tr>
+</thead>
+<tbody>
 
 <?php
 
@@ -224,27 +411,27 @@ while($weights = mysqli_fetch_assoc($weights_query)) {
 	if ($weights['fuel']=="false") {
 		echo " colspan=\"2\"";
 	}
-	echo ">" . $weights['item'] . "</td>\n";
+	echo " class=\"align-middle\">" . $weights['item'] . "</td>\n";
 	if ($weights['fuel']=="true") {
-		echo "<td style=\"text-align: center;\">";
-		echo "<div style=\"display: inline-block; width: 50px;\"><input type=\"number\" step=\"any\" name=\"line" . $weights['id'] . "_gallons_to\" tabindex=\"" . $tabindex . "\" onblur=\"Process()\" class=\"numbergals\"></div><div style=\"display: inline-block; width: 120px;\">" . $aircraft['fuelunit'] . " Takeoff</div><br>\n";
-		echo "<div style=\"display: inline-block; width: 50px;\"><input type=\"number\" step=\"any\" name=\"line" . $weights['id'] . "_gallons_ldg\" tabindex=\"" . $tabindex . "\" onblur=\"Process()\" class=\"numbergals\"></div><div style=\"display: inline-block; width: 120px;\">" . $aircraft['fuelunit'] . " Landing</div>";
+		echo "<td class=\"text-start align-middle\">";
+		echo "<div class=\"d-flex align-items-center gap-2 mb-1\"><input type=\"number\" step=\"any\" name=\"line" . $weights['id'] . "_gallons_to\" tabindex=\"" . $tabindex . "\" onblur=\"Process()\" class=\"form-control form-control-sm text-center\" style=\"width: 60px;\"><small class=\"text-muted text-nowrap\">" . $aircraft['fuelunit'] . " TO</small></div>\n";
+		echo "<div class=\"d-flex align-items-center gap-2\"><input type=\"number\" step=\"any\" name=\"line" . $weights['id'] . "_gallons_ldg\" tabindex=\"" . $tabindex . "\" onblur=\"Process()\" class=\"form-control form-control-sm text-center\" style=\"width: 60px;\"><small class=\"text-muted text-nowrap\">" . $aircraft['fuelunit'] . " LDG</small></div>";
 		$tabindex++; echo "</td>\n";
-		echo "<td style=\"text-align: center;\"><div><input type=\"number\" name=\"line" . $weights['id'] . "_wt_to\" readonly class=\"readonly numbers\"></div>";
-		echo "<div><input type=\"number\" name=\"line" . $weights['id'] . "_wt_ldg\" readonly class=\"readonly numbers\"></div></td>\n";
+		echo "<td class=\"text-center align-middle\"><div class=\"mb-1\"><input type=\"number\" name=\"line" . $weights['id'] . "_wt_to\" readonly class=\"form-control form-control-sm text-center\" style=\"width: 80px; display: inline-block; background-color: #f8f9fa;\"></div>";
+		echo "<div><input type=\"number\" name=\"line" . $weights['id'] . "_wt_ldg\" readonly class=\"form-control form-control-sm text-center\" style=\"width: 80px; display: inline-block; background-color: #f8f9fa;\"></div></td>\n";
 	} else {
 		if ($weights['emptyweight']=="true") {
-			echo "<td style=\"text-align: center;\"><input type=\"number\" name=\"line" . $weights['id'] . "_wt\" readonly class=\"readonly numbers\"></td>\n";
+			echo "<td class=\"text-center align-middle\"><input type=\"number\" name=\"line" . $weights['id'] . "_wt\" readonly class=\"form-control form-control-sm text-center\" style=\"width: 80px; display: inline-block; background-color: #f8f9fa;\"></td>\n";
 		} else {
-			echo "<td style=\"text-align: center;\"><input type=\"number\" step=\"any\" name=\"line" . $weights['id'] . "_wt\" tabindex=\"" . $tabindex . "\" onblur=\"Process()\" class=\"numbers\"></td>\n";
+			echo "<td class=\"text-center align-middle\"><input type=\"number\" step=\"any\" name=\"line" . $weights['id'] . "_wt\" tabindex=\"" . $tabindex . "\" onblur=\"Process()\" class=\"form-control form-control-sm text-center\" style=\"width: 80px; display: inline-block;\"></td>\n";
 		}
 	}
-	echo "<td style=\"text-align: center;\"><input type=\"number\" name=\"line" . $weights['id'] . "_arm\" readonly class=\"readonly numbers\"></td>\n";
+	echo "<td class=\"text-center align-middle\"><input type=\"number\" name=\"line" . $weights['id'] . "_arm\" readonly class=\"form-control form-control-sm text-center\" style=\"width: 80px; display: inline-block; background-color: #f8f9fa;\"></td>\n";
 	if ($weights['fuel']=="true") {
-		echo "<td style=\"text-align: center;\"><div><input type=\"number\" name=\"line" . $weights['id'] . "_mom_to\" readonly class=\"readonly numbers\">";
-		echo "\n</div><div><input type=\"number\" name=\"line" . $weights['id'] . "_mom_ldg\" readonly class=\"readonly numbers\">";
+		echo "<td class=\"text-center align-middle\"><div class=\"mb-1\"><input type=\"number\" name=\"line" . $weights['id'] . "_mom_to\" readonly class=\"form-control form-control-sm text-center\" style=\"width: 90px; display: inline-block; background-color: #f8f9fa;\">";
+		echo "</div><div><input type=\"number\" name=\"line" . $weights['id'] . "_mom_ldg\" readonly class=\"form-control form-control-sm text-center\" style=\"width: 90px; display: inline-block; background-color: #f8f9fa;\">";
 	} else {
-		echo "<td style=\"text-align: center;\"><div><input type=\"number\" name=\"line" . $weights['id'] . "_mom\" readonly class=\"readonly numbers\">";
+		echo "<td class=\"text-center align-middle\"><div><input type=\"number\" name=\"line" . $weights['id'] . "_mom\" readonly class=\"form-control form-control-sm text-center\" style=\"width: 90px; display: inline-block; background-color: #f8f9fa;\">";
 	}
 	echo "</div></td></tr>\n\n";
 	$tabindex++;
@@ -252,33 +439,63 @@ while($weights = mysqli_fetch_assoc($weights_query)) {
 
 ?>
 
-<tr style="background-color: #FFFF80">
-<td style="text-align: right; font-weight: bold;" colspan="2">Totals at Takeoff<br>Landing</td>
-<td style="text-align: center;"><div><input type="number" name="totwt_to" readonly class="readonly numbers"></div><div><input type="number" name="totwt_ldg" readonly class="readonly numbers"></div></td>
-<td style="text-align: center;"><div><input type="number" name="totarm_to" readonly class="readonly numbers"></div><div><input type="number" name="totarm_ldg" readonly class="readonly numbers"></div></td>
-<td style="text-align: center;"><div><input type="number" name="totmom_to" readonly class="readonly numbers"></div><div><input type="number" name="totmom_ldg" readonly class="readonly numbers"></div></td>
+</tbody>
+<tfoot class="table-warning">
+<tr>
+<td class="text-end fw-bold align-middle" colspan="2">
+<div>Totals at Takeoff</div>
+<div>Landing</div>
+</td>
+<td class="text-center align-middle">
+<div class="mb-1"><input type="number" name="totwt_to" readonly class="form-control form-control-sm text-center fw-bold" style="width: 95px; display: inline-block; background-color: #fff3cd;"></div>
+<div><input type="number" name="totwt_ldg" readonly class="form-control form-control-sm text-center fw-bold" style="width: 95px; display: inline-block; background-color: #fff3cd;"></div>
+</td>
+<td class="text-center align-middle">
+<div class="mb-1"><input type="number" name="totarm_to" readonly class="form-control form-control-sm text-center fw-bold" style="width: 95px; display: inline-block; background-color: #fff3cd;"></div>
+<div><input type="number" name="totarm_ldg" readonly class="form-control form-control-sm text-center fw-bold" style="width: 95px; display: inline-block; background-color: #fff3cd;"></div>
+</td>
+<td class="text-center align-middle">
+<div class="mb-1"><input type="number" name="totmom_to" readonly class="form-control form-control-sm text-center fw-bold" style="width: 105px; display: inline-block; background-color: #fff3cd;"></div>
+<div><input type="number" name="totmom_ldg" readonly class="form-control form-control-sm text-center fw-bold" style="width: 105px; display: inline-block; background-color: #fff3cd;"></div>
+</td>
 </tr>
-
-<tr style="background-color: #FFFF80"><td colspan="5"><span style="font-weight: bold;">CG limits: </span><span style="font-family: monospace"><?php echo $aircraft['cglimits']; ?></span></td></tr>
+<tr>
+<td colspan="5" class="bg-warning text-dark">
+<strong>CG limits:</strong> <code><?php echo $aircraft['cglimits']; ?></code>
+</td>
+</tr>
+</tfoot>
 </table>
+</div>
 
+<div class="mt-4">
 <?php
-echo "<iframe id=\"wbimage\" src=\"loading.png\" width=\"710\" height=\"360\" style=\"border:0px; display: block; margin-left: auto; margin-right: auto;\"></iframe>\n\n";
+echo "<div class=\"text-center mb-3\">\n";
+echo "<iframe id=\"wbimage\" src=\"loading.png\" width=\"100%\" height=\"360\" style=\"border:0px; max-width: 710px;\"></iframe>\n";
+echo "</div>\n";
 ?>
 
-<!-- <div class="noprint" style="text-align:center; font-style:italic;">(click graph to enlarge)</div> -->
+<div class="alert alert-info">
+<strong>Pilot Signature:</strong> X_________________________________________________<br>
+<small>The Pilot In Command is responsible for ensuring all calculations are correct.<br>
+<?php echo date("D, j M Y H:i:s T"); ?></small>
+</div>
 
-<div id="toolbar" class="noprint" style="line-height:35px;">
-<span style="width: 130px; float: left; line-height:40px;"><abbr title="TippingPoint is free, open source weight and balance software.  Click to find out how to use it for your flight department, flight school, FBO or even your own personal aircraft.">
-<a href="http://www.TippingPointTool.com" target="_blank" style="font-size:22px; color: yellow;">TippingPoint</a></abbr></span>
-<span style="width: 770px; text-align:center; float: right; line-height:45px;">
-<input type="submit" name="Submit" value="Calculate" tabindex="<?php echo($tabindex); $tabindex++; ?>" onClick="Process()">&nbsp;&nbsp;
-<input type="button" name="Reset" value="Reset" onclick="WeightBal()">&nbsp;&nbsp;
-<input type="button" value="Print" onClick="window.print()">&nbsp;&nbsp;
-<input type="button" value="e-File" disabled>&nbsp;&nbsp;
-<a href="index.php">Choose Another Aircraft</a></span></div>
+<div class="d-flex flex-wrap justify-content-center align-items-center gap-2 noprint">
+<button type="submit" name="Submit" class="btn btn-primary" tabindex="<?php echo($tabindex); $tabindex++; ?>" onClick="Process()">Calculate</button>
+<button type="button" name="Reset" class="btn btn-outline-secondary" onclick="WeightBal()">Reset</button>
+<button type="button" class="btn btn-outline-info" onClick="window.print()">Print</button>
+<a href="index.php" class="btn btn-outline-primary">Choose Another Aircraft</a>
+</div>
 
 </form>
+
+</div>
+
+</div>
+</div>
+</div>
+</div>
 
 <?php
 }

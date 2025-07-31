@@ -1,4 +1,38 @@
 <?php
+// Check if system is set up before trying to load database-dependent functions
+if (!file_exists('config.inc')) {
+    // System not set up, redirect to setup
+    include 'common.inc';
+    PageHeader('Setup Required');
+    ?>
+    
+    <body>
+    <div class="container">
+    <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+    <div class="card mt-4">
+    <div class="card-header bg-warning text-dark text-center">
+    <h3 class="mb-0">Setup Required</h3>
+    </div>
+    <div class="card-body text-center">
+    <div class="alert alert-warning">
+    <h5 class="alert-heading">TippingPoint Not Configured</h5>
+    <p>TippingPoint has not been set up yet. Please run the initial setup to configure your database and create an administrator account.</p>
+    <hr>
+    <a href="setup.php" class="btn btn-primary">Start Setup</a>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    
+    <?php
+    PageFooter('TippingPoint Setup', 'setup@tippingpoint', $ver);
+    exit;
+}
+
+// System is set up, proceed normally
 include 'func.inc';
 PageHeader("Admin Interface");
 session_start();

@@ -9,6 +9,12 @@
 + Feature addition
 - Feature removal
 
+v1.2.1 30 Jul 2025
+==================
++ Restyled rest of site to a modern Bootstrap design
++ Improved printable view
+* Improved setup flow for new installs
+
 v1.2.0 30 Jul 2025
 ==================
 * Numerous small bug fixes

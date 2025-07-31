@@ -1,29 +1,22 @@
-<?php ob_start(); ?>
-<html>
-<head>
-<title>TippingPoint - Initial Setup</title>
+<?php
+// Setup script can use common.inc safely since it doesn't require config.inc
+include 'common.inc';
+PageHeader("Initial Setup");
+?>
 
-<style type="text/css">
-<!--
-body {font-family: Cambria, Tahoma, Verdana; font-size: 12px;}
-input, select {font-family: Cambria, Tahoma, Verdana; font-size: 11px; border:1px solid #AAAAAA;}
-th {background-color: #4F81BD; text-align: center;}
-abbr {border-bottom: 1px dashed; cursor: help;}
-.titletext {color: #17365D; font-size: 24px;}
-.readonly {background-color: #CCCCCC;}
-.numbers {text-align: right; width: 70px;}
-.numbergals {text-align: right; width: 40px;}
-@media print { .noprint { display: none; } }
--->
-</style>
-
-<body><table border="1" cellpadding="3" width="700" align="center"><tr><td>
-	<div class="titletext" style="text-align: center">TippingPoint - Initial Setup</div>
-
+<body>
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-lg-6 col-md-8">
+<div class="card mt-4">
+<div class="card-header bg-primary text-white text-center">
+<h3 class="mb-0">TippingPoint - Initial Setup</h3>
+</div>
+<div class="card-body">
 
 <?php
 if (file_exists("config.inc") && $_REQUEST['func']=="") {
-	echo "Tipping point is already installed.";
+	echo "<div class='alert alert-info text-center'>Tipping point is already installed.</div>";
 	chmod("setup.php", 0000);
 	chmod("upgrade.php", 0000);
 
@@ -58,25 +51,33 @@ if (file_exists("config.inc") && $_REQUEST['func']=="") {
 			header("Location: http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "?func=step3");
 
 		case "step3":
-			$config['timezone'] = "America/Anchorage";
-			require "func.inc";
-
-			echo("<p>Define system settings.</p>\n"
-						.    "<form method=\"post\" action=\"setup.php\"><input type=\"hidden\" name=\"func\" value=\"step4\">\n"
-	        	.    "<table align=\"center\">\n"
-		        .    "<tr><td align=\"right\">Site/Organization Name</td><td><input type=\"text\" name=\"site_name\"></td></tr>\n"
-		        .    "<tr><td align=\"right\">Administrator E-mail Address</td><td><input type=\"email\" name=\"administrator\"></td></tr>\n"
-		        .    "<tr><td align=\"right\">Local Time Zone</td><td>\n");
-		             TimeZoneList("");
-	        	echo "</td></tr>\n"
-		        .    "<tr><td colspan=\"2\" align=\"center\"><input type=\"submit\" value=\"Step 3\"></td></tr></table></form>\n";
+			echo "<h5 class='card-title'>Define system settings</h5>\n";
+			echo "<form method='post' action='setup.php'><input type='hidden' name='func' value='step4'>\n";
+			echo "<div class='mb-3'>\n";
+			echo "<label for='site_name' class='form-label'>Site/Organization Name</label>\n";
+			echo "<input type='text' class='form-control' id='site_name' name='site_name' required>\n";
+			echo "</div>\n";
+			echo "<div class='mb-3'>\n";
+			echo "<label for='administrator' class='form-label'>Administrator E-mail Address</label>\n";
+			echo "<input type='email' class='form-control' id='administrator' name='administrator' required>\n";
+			echo "</div>\n";
+			echo "<div class='mb-3'>\n";
+			echo "<label for='timezone' class='form-label'>Local Time Zone</label>\n";
+			// Use TimezoneList function from common.inc
+			TimezoneList("");
+			echo "</div>\n";
+			echo "<div class='d-grid'>\n";
+			echo "<button type='submit' class='btn btn-primary'>Continue to Step 4</button>\n";
+			echo "</div>\n";
+			echo "</form>\n";
 
 		    	break;
 
 		case "step4":
-			$config['timezone'] = "America/Anchorage";
-			include "func.inc";
+			// Load the config file we just created
+			include "config.inc";
 			$con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysqli_connect_error());
+			// $ver is available from common.inc
 
 			// Insert system settings into database
 			$sql_query = "INSERT INTO `configuration` (`id`, `item`, `value`) "
@@ -84,51 +85,89 @@ if (file_exists("config.inc") && $_REQUEST['func']=="") {
 			.    "(4, 'update_check', '" . time() . "'), (5, 'update_version', '" . $ver . "');";
 			mysqli_query($con,$sql_query);
 
-			echo("<p>Create an administrative user.</p>\n"
-			.    "<form method=\"post\" action=\"setup.php\"><input type=\"hidden\" name=\"func\" value=\"step5\">\n"
-			.    "<table align=\"center\" width=\"100%\" border=\"0\">\n"
-			.    "<tr><td align=\"right\" width=\"50%\">Username</td><td width=\"50%\"><input type=\"text\" name=\"username\"></td></tr>\n"
-			.    "<tr><td align=\"right\">Password</td><td><input type=\"password\" name=\"password\"></td></tr>\n"
-			.    "<tr><td align=\"right\">Name</td><td><input type=\"text\" name=\"name\"></td></tr>\n"
-			.    "<tr><td align=\"right\">E-mail</td><td><input type=\"email\" name=\"email\"></td></tr>\n"
-			.    "<tr><td colspan=\"2\" align=\"center\"><input type=\"submit\" name=\"what\" value=\"Finish\"></td></tr>\n"
-			.    "</table></form>\n\n"
-			);
+			echo "<h5 class='card-title'>Create an administrative user</h5>\n";
+			echo "<form method='post' action='setup.php'><input type='hidden' name='func' value='step5'>\n";
+			echo "<div class='mb-3'>\n";
+			echo "<label for='username' class='form-label'>Username</label>\n";
+			echo "<input type='text' class='form-control' id='username' name='username' required>\n";
+			echo "</div>\n";
+			echo "<div class='mb-3'>\n";
+			echo "<label for='password' class='form-label'>Password</label>\n";
+			echo "<input type='password' class='form-control' id='password' name='password' required>\n";
+			echo "</div>\n";
+			echo "<div class='mb-3'>\n";
+			echo "<label for='name' class='form-label'>Full Name</label>\n";
+			echo "<input type='text' class='form-control' id='name' name='name' required>\n";
+			echo "</div>\n";
+			echo "<div class='mb-3'>\n";
+			echo "<label for='email' class='form-label'>E-mail Address</label>\n";
+			echo "<input type='email' class='form-control' id='email' name='email' required>\n";
+			echo "</div>\n";
+			echo "<div class='d-grid'>\n";
+			echo "<button type='submit' name='what' class='btn btn-success' value='Finish'>Finish Setup</button>\n";
+			echo "</div>\n";
+			echo "</form>\n\n";
 
 			break;
 
 		case "step5":
-			include "func.inc";
+			// Load the config file
+			include "config.inc";
+			$con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysqli_connect_error());
 			// Insert administrative user
 			$sql_query = "INSERT INTO `users` (`username`, `password`, `name`, `email`, `superuser`) VALUES "
 			.	"('" . $_REQUEST['username'] . "', '" . password_hash($_REQUEST['password'], PASSWORD_DEFAULT) . "', '" . $_REQUEST['name'] . "', '" . $_REQUEST['email'] . "', '1')";
 			mysqli_query($con,$sql_query);
 
-			echo("<p>Initial setup is complete.  Proceed to the <a href=\"admin.php\">admin page</a> and create your first aircraft.</p>"
-			.    "<p>If you find bugs or have a suggestion, please <a href=\"https://sourceforge.net/p/tippingpoint/tickets/\" target=\"_blank\">let us know</a>.  Thanks for using TippingPoint!</p>\n");
+			echo "<div class='alert alert-success'>\n";
+			echo "<h5 class='alert-heading'>Setup Complete!</h5>\n";
+			echo "<p>Initial setup is complete. Proceed to the <a href='admin.php' class='alert-link'>admin page</a> and create your first aircraft.</p>\n";
+			echo "<hr>\n";
+			echo "<p class='mb-0'>If you find bugs or have a suggestion, please <a href='https://github.com/CAP-CalebNewville/tipping-point/issues' target='_blank' class='alert-link'>let us know on GitHub</a>. Thanks for using TippingPoint!</p>\n";
+			echo "</div>\n";
 
 			chmod("setup.php", 0000);
 			chmod("upgrade.php", 0000);
 			break;
 
 	    default:
-		echo("<p>Enter your MySQL server information.</p>\n"
-		.    "<form method=\"post\" action=\"setup.php\"><input type=\"hidden\" name=\"func\" value=\"step2\">\n"
-		.    "<table align=\"center\">\n"
-		.    "<tr><td align=\"right\">Database Server</td><td><input type=\"text\" name=\"dbserver\" value=\"localhost\"></td></tr>\n"
-		.    "<tr><td align=\"right\">Database Name</td><td><input type=\"text\" name=\"dbname\" value=\"tippingpoint\"></td></tr>\n"
-		.    "<tr><td align=\"right\">Database Username</td><td><input type=\"text\" name=\"dbuser\"></td></tr>\n"
-		.    "<tr><td align=\"right\">Database Password</td><td><input type=\"text\" name=\"dbpass\"></td></tr>\n"
-		.    "<tr><td colspan=\"2\" align=\"center\"><input type=\"submit\" value=\"Step 2\"></td></tr>\n"
-		.    "</table></form>\n\n"
-		);
+		echo "<h5 class='card-title'>Database Configuration</h5>\n";
+		echo "<p class='text-muted'>Enter your MySQL server information to begin setup.</p>\n";
+		echo "<form method='post' action='setup.php'><input type='hidden' name='func' value='step2'>\n";
+		echo "<div class='mb-3'>\n";
+		echo "<label for='dbserver' class='form-label'>Database Server</label>\n";
+		echo "<input type='text' class='form-control' id='dbserver' name='dbserver' value='localhost' required>\n";
+		echo "</div>\n";
+		echo "<div class='mb-3'>\n";
+		echo "<label for='dbname' class='form-label'>Database Name</label>\n";
+		echo "<input type='text' class='form-control' id='dbname' name='dbname' value='tippingpoint' required>\n";
+		echo "</div>\n";
+		echo "<div class='mb-3'>\n";
+		echo "<label for='dbuser' class='form-label'>Database Username</label>\n";
+		echo "<input type='text' class='form-control' id='dbuser' name='dbuser' required>\n";
+		echo "</div>\n";
+		echo "<div class='mb-3'>\n";
+		echo "<label for='dbpass' class='form-label'>Database Password</label>\n";
+		echo "<input type='password' class='form-control' id='dbpass' name='dbpass'>\n";
+		echo "<div class='form-text'>Leave blank if no password is required.</div>\n";
+		echo "</div>\n";
+		echo "<div class='d-grid'>\n";
+		echo "<button type='submit' class='btn btn-primary'>Continue to Step 2</button>\n";
+		echo "</div>\n";
+		echo "</form>\n\n";
 	}
-
 }
 ?>
 
+</div>
+</div>
+</div>
+</div>
+</div>
 
-</td></tr></table>
-<p class="noprint" style="text-align:center; font-size:12px;"><i><a href="http://www.TippingPointTool.com" target="_blank">TippingPoint - Open Source Weight &amp; Balance Software</a></i></p>
-
-</body></html>
+<?php
+// Use PageFooter from common.inc but we need some basic config for the footer
+$site_name = "TippingPoint Setup";
+$admin = "setup@tippingpoint";
+PageFooter($site_name, $admin, $ver);
+?>

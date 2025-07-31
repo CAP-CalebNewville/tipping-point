@@ -1,4 +1,14 @@
 <?php
+// Check if system is set up before trying to load database-dependent functions
+if (!file_exists('config.inc')) {
+    // Return an error image or redirect
+    header('HTTP/1.1 503 Service Unavailable');
+    header('Content-Type: text/plain');
+    echo 'TippingPoint not configured. Please run setup.php first.';
+    exit;
+}
+
+// System is set up, proceed normally
 include 'func.inc';
 
 // DEFINE VARIABLES
@@ -27,8 +37,27 @@ while($row = mysqli_fetch_array($result)) {
 
 // NEW CODE HERE ///////////////////////////////////////////////////////////////
 ?>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weight and Balance Chart</title>
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+#chart_div {
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+</style>
+</head>
+<body>
 <?php
 	if ($chart_size=="small") {
 		echo "<div id=\"chart_div\" style=\"width: 400px; height: 195px\"></div>\n";
@@ -126,3 +155,5 @@ function drawBackgroundColor() {
 }
 
 </script>
+</body>
+</html>
