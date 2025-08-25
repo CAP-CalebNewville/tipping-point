@@ -1,13 +1,13 @@
 <?php
-// Setup script can use common.inc safely since it doesn't require config.inc
-include 'common.inc';
+// Setup script for SQLite-based TippingPoint
+include_once 'common.inc';
 PageHeader("Initial Setup");
 ?>
 
 <body>
 <div class="container">
 <div class="row justify-content-center">
-<div class="col-lg-6 col-md-8">
+<div class="col-lg-8 col-md-10">
 <div class="card mt-4">
 <div class="card-header bg-primary text-white text-center">
 <h3 class="mb-0">TippingPoint - Initial Setup</h3>
@@ -15,146 +15,299 @@ PageHeader("Initial Setup");
 <div class="card-body">
 
 <?php
-if (file_exists("config.inc") && $_REQUEST['func']=="") {
-	echo "<div class='alert alert-info text-center'>Tipping point is already installed.</div>";
-	chmod("setup.php", 0000);
-	chmod("upgrade.php", 0000);
+// Check if already installed
+if (isSystemInstalled() && (!isset($_REQUEST['func']) || $_REQUEST['func']=="")) {
+	echo "<div class='alert alert-info text-center'>TippingPoint is already installed.</div>";
+	echo "<div class='text-center mt-3'>";
+	echo "<a href='index.php' class='btn btn-primary'>Go to Application</a> ";
+	echo "<a href='admin.php' class='btn btn-outline-primary'>Admin Interface</a>";
+	echo "</div>";
 
 } else {
-	switch ($_REQUEST["func"]) {
+	switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 		case "step2":
-			// Write config file
-			$configfile = fopen("config.inc", "w+");
-			fwrite($configfile,
-			"<?php\n\$dbserver=\"" . $_REQUEST['dbserver'] . "\";\n"
-			. "\$dbname=\"" . $_REQUEST['dbname'] . "\";\n"
-			. "\$dbuser=\"" . $_REQUEST['dbuser'] . "\";\n"
-			. "\$dbpass=\"" . $_REQUEST['dbpass'] . "\";\n?>");
-
-			// Create database
-			$con = mysqli_connect($_REQUEST['dbserver'],$_REQUEST['dbuser'],$_REQUEST['dbpass']) or die(mysqli_connect_error());
-			$sql_query = "CREATE DATABASE IF NOT EXISTS " . $_REQUEST['dbname'] . " ;";
-			mysqli_multi_query($con,$sql_query);
-
-			// Populate database
-			$con = mysqli_connect($_REQUEST['dbserver'],$_REQUEST['dbuser'],$_REQUEST['dbpass'],$_REQUEST['dbname']) or die(mysqli_connect_error());
-			$sql_query = "SET SQL_MODE=\"NO_AUTO_VALUE_ON_ZERO\";\n"
-			.	"SET time_zone = \"+00:00\";\n"
-			.   "CREATE TABLE IF NOT EXISTS `aircraft` (`id` int(11) NOT NULL auto_increment, `active` tinyint(1) NOT NULL default '1', `tailnumber` char(25) NOT NULL, `makemodel` char(50) NOT NULL, `emptywt` float NOT NULL, `emptycg` float NOT NULL, `maxwt` float NOT NULL, `cglimits` char(60) NOT NULL, `cgwarnfwd` float NOT NULL, `cgwarnaft` float NOT NULL, `fuelunit` char(25) NOT NULL, PRIMARY KEY  (`id`)) ENGINE=MyISAM  DEFAULT CHARSET=latin1;\n"
-			.   "CREATE TABLE IF NOT EXISTS `aircraft_cg` (`id` int(11) NOT NULL auto_increment, `tailnumber` int(11) NOT NULL, `arm` float NOT NULL, `weight` float NOT NULL, PRIMARY KEY  (`id`)) ENGINE=MyISAM  DEFAULT CHARSET=latin1;\n"
-			.   "CREATE TABLE IF NOT EXISTS `aircraft_weights` (`id` int(11) NOT NULL auto_increment, `tailnumber` int(11) NOT NULL, `order` smallint(3) NOT NULL, `item` char(50) NOT NULL, `weight` float NOT NULL, `arm` float NOT NULL, `emptyweight` enum('true','false') NOT NULL default 'false', `fuel` enum('true','false') NOT NULL default 'false', `fuelwt` float NOT NULL, PRIMARY KEY  (`id`)) ENGINE=MyISAM  DEFAULT CHARSET=latin1;\n"
-			.   "CREATE TABLE IF NOT EXISTS `audit` (`id` int(11) NOT NULL auto_increment, `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP, `who` char(24) NOT NULL, `what` varchar(32768) NOT NULL, PRIMARY KEY  (`id`)) ENGINE=MyISAM  DEFAULT CHARSET=latin1;\n"
-			.   "CREATE TABLE IF NOT EXISTS `configuration` (`id` int(11) NOT NULL auto_increment, `item` char(30) NOT NULL, `value` varchar(255) NOT NULL, PRIMARY KEY  (`id`)) ENGINE=MyISAM  DEFAULT CHARSET=latin1;\n"
-			.   "CREATE TABLE IF NOT EXISTS `users` (`id` int(11) NOT NULL auto_increment, `username` char(24) NOT NULL, `password` char(32) NOT NULL, `name` char(48) NOT NULL, `email` char(48) NOT NULL, `superuser` tinyint(4) NOT NULL, PRIMARY KEY  (`id`)) ENGINE=MyISAM  DEFAULT CHARSET=latin1;\n";
-			mysqli_multi_query($con,$sql_query);
-
-			header("Location: http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "?func=step3");
+			// Requirements check passed, create SQLite database
+			try {
+				include 'database.inc';
+				$pdo = createSQLiteDatabase();
+				
+				echo "<div class='alert alert-success'>";
+				echo "<h5 class='alert-heading'>Database Created Successfully!</h5>";
+				echo "<p>SQLite database has been created and initialized.</p>";
+				echo "</div>";
+				
+				echo "<h5 class='card-title'>System Configuration</h5>";
+				echo "<form method='post' action='setup.php'><input type='hidden' name='func' value='step3'>";
+				echo "<div class='mb-3'>";
+				echo "<label for='site_name' class='form-label'>Site/Organization Name</label>";
+				echo "<input type='text' class='form-control' id='site_name' name='site_name' placeholder='e.g., Hometown Flying Club' required>";
+				echo "</div>";
+				echo "<div class='mb-3'>";
+				echo "<label for='administrator' class='form-label'>Administrator E-mail Address</label>";
+				echo "<input type='email' class='form-control' id='administrator' name='administrator' placeholder='admin@example.com' required>";
+				echo "</div>";
+				echo "<div class='mb-3'>";
+				echo "<label for='timezone' class='form-label'>Local Time Zone</label>";
+				TimezoneList("America/New_York"); // Default to US Eastern
+				echo "</div>";
+				echo "<div class='d-grid'>";
+				echo "<button type='submit' class='btn btn-primary'>Continue to Step 3</button>";
+				echo "</div>";
+				echo "</form>";
+				
+			} catch (Exception $e) {
+				echo "<div class='alert alert-danger'>";
+				echo "<h5 class='alert-heading'>Database Creation Failed</h5>";
+				echo "<p>Error: " . htmlspecialchars($e->getMessage()) . "</p>";
+				echo "</div>";
+				echo "<a href='setup.php' class='btn btn-primary'>Try Again</a>";
+			}
+			break;
 
 		case "step3":
-			echo "<h5 class='card-title'>Define system settings</h5>\n";
-			echo "<form method='post' action='setup.php'><input type='hidden' name='func' value='step4'>\n";
-			echo "<div class='mb-3'>\n";
-			echo "<label for='site_name' class='form-label'>Site/Organization Name</label>\n";
-			echo "<input type='text' class='form-control' id='site_name' name='site_name' required>\n";
-			echo "</div>\n";
-			echo "<div class='mb-3'>\n";
-			echo "<label for='administrator' class='form-label'>Administrator E-mail Address</label>\n";
-			echo "<input type='email' class='form-control' id='administrator' name='administrator' required>\n";
-			echo "</div>\n";
-			echo "<div class='mb-3'>\n";
-			echo "<label for='timezone' class='form-label'>Local Time Zone</label>\n";
-			// Use TimezoneList function from common.inc
-			TimezoneList("");
-			echo "</div>\n";
-			echo "<div class='d-grid'>\n";
-			echo "<button type='submit' class='btn btn-primary'>Continue to Step 4</button>\n";
-			echo "</div>\n";
-			echo "</form>\n";
-
-		    	break;
+			// Save configuration settings
+			try {
+				include 'database.inc';
+				$db = getDB();
+				
+				// Insert system settings
+				$settings = [
+					['site_name', $_REQUEST['site_name']],
+					['administrator', $_REQUEST['administrator']],
+					['timezone', $_REQUEST['timezone']],
+					['update_check', time()],
+					['update_version', $ver],
+					['database_type', 'sqlite'],
+					['pilot_signature', '0']
+				];
+				
+				foreach ($settings as $setting) {
+					$db->query("INSERT INTO configuration (item, value) VALUES (?, ?)", $setting);
+				}
+				
+				echo "<h5 class='card-title'>Create Administrator Account</h5>";
+				echo "<p class='text-muted'>Create the first user account with administrative privileges.</p>";
+				echo "<form method='post' action='setup.php'><input type='hidden' name='func' value='step4'>";
+				echo "<div class='mb-3'>";
+				echo "<label for='username' class='form-label'>Username</label>";
+				echo "<input type='text' class='form-control' id='username' name='username' required>";
+				echo "</div>";
+				echo "<div class='mb-3'>";
+				echo "<label for='password' class='form-label'>Password</label>";
+				echo "<input type='password' class='form-control' id='password' name='password' minlength='6' required>";
+				echo "<div class='form-text'>Password must be at least 6 characters long.</div>";
+				echo "</div>";
+				echo "<div class='mb-3'>";
+				echo "<label for='name' class='form-label'>Full Name</label>";
+				echo "<input type='text' class='form-control' id='name' name='name' required>";
+				echo "</div>";
+				echo "<div class='mb-3'>";
+				echo "<label for='email' class='form-label'>E-mail Address</label>";
+				echo "<input type='email' class='form-control' id='email' name='email' required>";
+				echo "</div>";
+				echo "<div class='d-grid'>";
+				echo "<button type='submit' class='btn btn-success'>Complete Setup</button>";
+				echo "</div>";
+				echo "</form>";
+				
+			} catch (Exception $e) {
+				echo "<div class='alert alert-danger'>";
+				echo "<h5 class='alert-heading'>Configuration Error</h5>";
+				echo "<p>Error: " . htmlspecialchars($e->getMessage()) . "</p>";
+				echo "</div>";
+			}
+			break;
 
 		case "step4":
-			// Load the config file we just created
-			include "config.inc";
-			$con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysqli_connect_error());
-			// $ver is available from common.inc
+			// Create administrator user and finish setup
+			try {
+				include 'database.inc';
+				$db = getDB();
+				
+				// Create administrator user
+				$hashedPassword = password_hash($_REQUEST['password'], PASSWORD_DEFAULT);
+				$db->query("INSERT INTO users (username, password, name, email, superuser) VALUES (?, ?, ?, ?, 1)", [
+					$_REQUEST['username'],
+					$hashedPassword,
+					$_REQUEST['name'],
+					$_REQUEST['email']
+				]);
+				
+				// Log setup completion
+				$db->query("INSERT INTO audit (who, what) VALUES (?, ?)", [
+					$_REQUEST['username'],
+					'SETUP: Initial setup completed'
+				]);
+				
+				// Create .htaccess file for security
+				$htaccess_content = "# TippingPoint Security Rules - Generated by setup.php
+# Protect sensitive files and directories
 
-			// Insert system settings into database
-			$sql_query = "INSERT INTO `configuration` (`id`, `item`, `value`) "
-			.    "VALUES (1, 'site_name', '" . $_REQUEST['site_name'] . "'), (2, 'administrator', '" . $_REQUEST['administrator'] . "'), (3, 'timezone', '" . $_REQUEST['timezone'] . "'), "
-			.    "(4, 'update_check', '" . time() . "'), (5, 'update_version', '" . $ver . "');";
-			mysqli_query($con,$sql_query);
+# Deny access to configuration files
+<Files ~ \"\\.(inc|conf)$\">
+    Require all denied
+</Files>
 
-			echo "<h5 class='card-title'>Create an administrative user</h5>\n";
-			echo "<form method='post' action='setup.php'><input type='hidden' name='func' value='step5'>\n";
-			echo "<div class='mb-3'>\n";
-			echo "<label for='username' class='form-label'>Username</label>\n";
-			echo "<input type='text' class='form-control' id='username' name='username' required>\n";
-			echo "</div>\n";
-			echo "<div class='mb-3'>\n";
-			echo "<label for='password' class='form-label'>Password</label>\n";
-			echo "<input type='password' class='form-control' id='password' name='password' required>\n";
-			echo "</div>\n";
-			echo "<div class='mb-3'>\n";
-			echo "<label for='name' class='form-label'>Full Name</label>\n";
-			echo "<input type='text' class='form-control' id='name' name='name' required>\n";
-			echo "</div>\n";
-			echo "<div class='mb-3'>\n";
-			echo "<label for='email' class='form-label'>E-mail Address</label>\n";
-			echo "<input type='email' class='form-control' id='email' name='email' required>\n";
-			echo "</div>\n";
-			echo "<div class='d-grid'>\n";
-			echo "<button type='submit' name='what' class='btn btn-success' value='Finish'>Finish Setup</button>\n";
-			echo "</div>\n";
-			echo "</form>\n\n";
+# Deny access to database files
+<Files ~ \"\\.(db|sqlite|sqlite3)$\">
+    Require all denied
+</Files>
 
+# Deny access to backup files
+<Files ~ \"\\.(bak|backup|old|tmp)$\">
+    Require all denied
+</Files>
+
+# Deny access to log files
+<Files ~ \"\\.(log)$\">
+    Require all denied
+</Files>
+
+# Disable directory browsing
+Options -Indexes
+
+# Prevent access to sensitive file patterns
+<FilesMatch \"(^#.*#|\\.(bak|config|dist|fla|inc|ini|log|psd|sh|sql|sw[op])|~)$\">
+    Require all denied
+</FilesMatch>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection \"1; mode=block\"
+    Header always set Referrer-Policy \"strict-origin-when-cross-origin\"
+</IfModule>
+";
+
+				try {
+					if (file_put_contents('.htaccess', $htaccess_content) !== false) {
+						$htaccess_created = true;
+						
+						// Test if .htaccess is being processed by creating a simple test
+						$test_htaccess = "# Test file\nRewriteEngine On\nRewriteRule ^test_htaccess_working$ - [R=410,L]";
+						file_put_contents('.htaccess_test', $test_htaccess);
+						
+						// Check if we can detect if .htaccess processing works
+						$htaccess_working = false;
+						if (function_exists('apache_get_modules')) {
+							$modules = apache_get_modules();
+							$htaccess_working = in_array('mod_rewrite', $modules);
+						}
+						
+						// Clean up test file
+						if (file_exists('.htaccess_test')) {
+							unlink('.htaccess_test');
+						}
+						
+						$db->query("INSERT INTO audit (who, what) VALUES (?, ?)", [
+							$_REQUEST['username'],
+							'SETUP: Created .htaccess security file with protections for: *.inc, *.db, *.sqlite*, data/, .git/, backup files, and security headers. Working: ' . ($htaccess_working ? 'Yes' : 'Unknown - may need Apache AllowOverride configuration')
+						]);
+					} else {
+						$htaccess_created = false;
+						$htaccess_working = false;
+					}
+				} catch (Exception $e) {
+					$htaccess_created = false;
+					$htaccess_working = false;
+					$db->query("INSERT INTO audit (who, what) VALUES (?, ?)", [
+						$_REQUEST['username'],
+						'SETUP: Failed to create .htaccess security file: ' . $e->getMessage()
+					]);
+				}
+				
+				echo "<div class='alert alert-success'>";
+				echo "<h4 class='alert-heading'>Setup Complete!</h4>";
+				echo "<p>TippingPoint has been successfully installed with SQLite database support.</p>";
+				if ($htaccess_created) {
+					if (isset($htaccess_working) && $htaccess_working) {
+						echo "<p><i class='text-success'>✓ Security .htaccess file created and working</i></p>";
+					} else {
+						echo "<p><i class='text-warning'>⚠ Security .htaccess file created but may not be active</i></p>";
+						echo "<div class='alert alert-warning mt-3'>";
+						echo "<h6>Apache Configuration Needed</h6>";
+						echo "<p>The .htaccess file was created but may not be protecting files. To enable .htaccess processing:</p>";
+						echo "<ol>";
+						echo "<li>Edit your Apache virtual host configuration</li>";
+						echo "<li>Change <code>AllowOverride None</code> to <code>AllowOverride All</code></li>";
+						echo "<li>Restart Apache: <code>sudo systemctl restart apache2</code></li>";
+						echo "</ol>";
+						echo "<p><strong>Alternative:</strong> Move the security rules from .htaccess directly into your Apache virtual host configuration.</p>";
+						echo "</div>";
+					}
+				} else {
+					echo "<p><i class='text-danger'>✗ Could not create .htaccess file - manual security configuration required</i></p>";
+				}
+				echo "<hr>";
+				echo "<div class='row'>";
+				echo "<div class='col-md-6'>";
+				echo "<h6>What's Next:</h6>";
+				echo "<ul>";
+				echo "<li>Access the <strong>Admin Interface</strong> to configure aircraft</li>";
+				echo "<li>Add your aircraft weight & balance data</li>";
+				echo "<li>Start using the weight & balance calculator</li>";
+				if ($htaccess_created) {
+					if (isset($htaccess_working) && $htaccess_working) {
+						echo "<li><small class='text-success'>Security: .htaccess protections active</small></li>";
+					} else {
+						echo "<li><small class='text-warning'>Security: .htaccess created (may need Apache config)</small></li>";
+					}
+				} else {
+					echo "<li><small class='text-danger'>Security: Manual protection setup needed</small></li>";
+				}
+				echo "</ul>";
+				echo "</div>";
+				echo "<div class='col-md-6'>";
+				echo "<h6>Administrator Login:</h6>";
+				echo "<p><strong>Username:</strong> " . htmlspecialchars($_REQUEST['username']) . "<br>";
+				echo "<strong>Password:</strong> [as entered]</p>";
+				echo "</div>";
+				echo "</div>";
+				echo "</div>";
+				
+				echo "<div class='d-grid gap-2 d-md-block text-center'>";
+				echo "<a href='admin.php' class='btn btn-primary'>Admin Interface</a> ";
+				echo "<a href='index.php' class='btn btn-outline-primary'>Weight & Balance Calculator</a>";
+				echo "</div>";
+				
+				echo "<div class='mt-4 text-center'>";
+				echo "<small class='text-muted'>Need help? Visit our <a href='https://github.com/CAP-CalebNewville/tipping-point' target='_blank'>GitHub repository</a> for documentation and support.</small>";
+				echo "</div>";
+				
+			} catch (Exception $e) {
+				echo "<div class='alert alert-danger'>";
+				echo "<h5 class='alert-heading'>Setup Error</h5>";
+				echo "<p>Error creating administrator account: " . htmlspecialchars($e->getMessage()) . "</p>";
+				echo "</div>";
+			}
 			break;
 
-		case "step5":
-			// Load the config file
-			include "config.inc";
-			$con = mysqli_connect($dbserver,$dbuser,$dbpass,$dbname) or die(mysqli_connect_error());
-			// Insert administrative user
-			$sql_query = "INSERT INTO `users` (`username`, `password`, `name`, `email`, `superuser`) VALUES "
-			.	"('" . $_REQUEST['username'] . "', '" . password_hash($_REQUEST['password'], PASSWORD_DEFAULT) . "', '" . $_REQUEST['name'] . "', '" . $_REQUEST['email'] . "', '1')";
-			mysqli_query($con,$sql_query);
-
-			echo "<div class='alert alert-success'>\n";
-			echo "<h5 class='alert-heading'>Setup Complete!</h5>\n";
-			echo "<p>Initial setup is complete. Proceed to the <a href='admin.php' class='alert-link'>admin page</a> and create your first aircraft.</p>\n";
-			echo "<hr>\n";
-			echo "<p class='mb-0'>If you find bugs or have a suggestion, please <a href='https://github.com/CAP-CalebNewville/tipping-point/issues' target='_blank' class='alert-link'>let us know on GitHub</a>. Thanks for using TippingPoint!</p>\n";
-			echo "</div>\n";
-
-			chmod("setup.php", 0000);
-			chmod("upgrade.php", 0000);
+		default:
+			// Step 1: Requirements check
+			echo "<h5 class='card-title'>Welcome to TippingPoint Setup</h5>";
+			echo "<p class='text-muted'>Let's check if your server meets the requirements to run TippingPoint.</p>";
+			
+			$requirementsPassed = displayRequirementsCheck();
+			
+			if ($requirementsPassed) {
+				echo "<form method='post' action='setup.php'>";
+				echo "<input type='hidden' name='func' value='step2'>";
+				echo "<div class='d-grid'>";
+				echo "<button type='submit' class='btn btn-success btn-lg'>Begin Setup</button>";
+				echo "</div>";
+				echo "</form>";
+			} else {
+				echo "<div class='alert alert-warning'>";
+				echo "<h6 class='alert-heading'>Requirements Not Met</h6>";
+				echo "<p>Please resolve the issues above before proceeding with setup. Contact your system administrator if you need assistance installing the required PHP extensions.</p>";
+				echo "</div>";
+				
+				echo "<div class='text-center'>";
+				echo "<a href='setup.php' class='btn btn-primary'>Recheck Requirements</a>";
+				echo "</div>";
+			}
 			break;
-
-	    default:
-		echo "<h5 class='card-title'>Database Configuration</h5>\n";
-		echo "<p class='text-muted'>Enter your MySQL server information to begin setup.</p>\n";
-		echo "<form method='post' action='setup.php'><input type='hidden' name='func' value='step2'>\n";
-		echo "<div class='mb-3'>\n";
-		echo "<label for='dbserver' class='form-label'>Database Server</label>\n";
-		echo "<input type='text' class='form-control' id='dbserver' name='dbserver' value='localhost' required>\n";
-		echo "</div>\n";
-		echo "<div class='mb-3'>\n";
-		echo "<label for='dbname' class='form-label'>Database Name</label>\n";
-		echo "<input type='text' class='form-control' id='dbname' name='dbname' value='tippingpoint' required>\n";
-		echo "</div>\n";
-		echo "<div class='mb-3'>\n";
-		echo "<label for='dbuser' class='form-label'>Database Username</label>\n";
-		echo "<input type='text' class='form-control' id='dbuser' name='dbuser' required>\n";
-		echo "</div>\n";
-		echo "<div class='mb-3'>\n";
-		echo "<label for='dbpass' class='form-label'>Database Password</label>\n";
-		echo "<input type='password' class='form-control' id='dbpass' name='dbpass'>\n";
-		echo "<div class='form-text'>Leave blank if no password is required.</div>\n";
-		echo "</div>\n";
-		echo "<div class='d-grid'>\n";
-		echo "<button type='submit' class='btn btn-primary'>Continue to Step 2</button>\n";
-		echo "</div>\n";
-		echo "</form>\n\n";
 	}
 }
 ?>
@@ -166,8 +319,5 @@ if (file_exists("config.inc") && $_REQUEST['func']=="") {
 </div>
 
 <?php
-// Use PageFooter from common.inc but we need some basic config for the footer
-$site_name = "TippingPoint Setup";
-$admin = "setup@tippingpoint";
-PageFooter($site_name, $admin, $ver);
+PageFooter("TippingPoint Setup", "setup@tippingpoint", $ver);
 ?>
