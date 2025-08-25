@@ -1,16 +1,16 @@
 TippingPoint - Aircraft Weight & Balance
 http://www.TippingPointTool.com
-v1.3.0 - 31 Jul 2025
+v2.0.0 - 25 Aug 2025
 ========================================
 
 ##Overview##
-TippingPoint is a web-based aircraft weight and balance calculator with graphing. It has support for multiple aircraft and administrators.
+TippingPoint is a professional web-based aircraft weight and balance calculator with advanced graphing and safety validation. It features support for multiple aircraft, administrators, and comprehensive flight safety checks.
 
-TippingPoint is ideal for flying clubs, flight schools, FBOs or even individuals.  The administrator (owner/mechanic/operations officer/etc) defines the aircraft configuration using a simple web interface.
+TippingPoint is ideal for flying clubs, flight schools, FBOs, and individual pilots. The administrator defines aircraft configurations through an intuitive web interface with support for multiple CG envelopes, configurable load types, and weight limits.
 
-Pilots visit an equally intuitive web interface, choose their tail number, and plug in their weights.  The entire preflight weight and balance can be completed in under a minute.
+Pilots visit a modern, responsive interface to select their aircraft and input weights. The system provides real-time CG validation, weight limit checking, and safety warnings. Complete preflight weight and balance calculations can be finished in under a minute with professional-grade accuracy.
 
-The current software version is 1.3.0.  View the [changelog](https://github.com/CAP-CalebNewville/tipping-point/blob/main/changelog.txt) for release history.
+The current software version is 2.0.0 - a major overhaul with enhanced safety features. View the [changelog](https://github.com/CAP-CalebNewville/tipping-point/blob/main/changelog.txt) for release history.
 
 ##Requirements##
 * A web server with PHP 8.0+
@@ -31,8 +31,14 @@ The current software version is 1.3.0.  View the [changelog](https://github.com/
 ##Download##
 [Download latest version](https://github.com/CAP-CalebNewville/tipping-point/releases)
 
-##Future Improvements##
-* Multiple weight envelopes on the graph (ie: normal category, utility category)
+##Key Features##
+* **Multiple CG Envelopes**: Normal, Utility, Restricted categories with real-time validation
+* **Advanced Safety Checks**: Weight limits, CG envelope violations, and MLW validation
+* **Flexible Load Types**: Configurable weight categories and removable items
+* **Multi-Unit Support**: Pounds/kilograms and gallons/liters with automatic conversion
+* **Professional Interface**: Responsive design optimized for all devices
+* **Enhanced Performance**: Optimized database queries and streamlined operations
+* **SQLite Database**: High-performance local database with MySQL migration support
 
 ##Contributing##
 If you find a bug, feature request or other suggestion, please submit it using the [issues](https://github.com/CAP-CalebNewville/tipping-point/issues) link above.
