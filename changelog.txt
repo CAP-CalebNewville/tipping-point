@@ -9,6 +9,18 @@
 + Feature addition
 - Feature removal
 
+v1.3.0 31 Jul 2025
+==================
++ Major architectural change: SQLite database support
++ Automatic migration from MySQL to SQLite
++ Improved setup process with requirements checking
++ Better database abstraction layer for future compatibility
++ Enhanced admin interface with migration prompts
++ Simplified installation - no database server required
+* Improved performance with SQLite
+* Better error handling and validation
+* Backward compatibility maintained for existing MySQL installations
+
 v1.2.1 30 Jul 2025
 ==================
 + Restyled rest of site to a modern Bootstrap design
