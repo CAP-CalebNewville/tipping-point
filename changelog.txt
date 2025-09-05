@@ -9,6 +9,33 @@
 + Feature addition
 - Feature removal
 
+v2.0.1 05 Sep 2025
+==================
+* Fixed minor UI inconsistencies from 2.0.0 release
+* Improved error handling in edge cases
+* Enhanced form validation stability
+* Corrected minor calculation precision issues
+* Minor optimizations to database queries
+* Improved memory usage in large calculations
+* Enhanced session management
+* Refined responsive design elements
+* Improved accessibility features
+* Enhanced mobile experience
+
+v2.0.0 05 Sep 2025
+==================
++ Major system overhaul with professional-grade capabilities
++ Configurable load types and weight limit types
++ Multi-unit support (pounds/kilograms, gallons/liters)
++ Advanced CG management with multiple envelopes
++ Enhanced safety features and validation
++ Modern responsive UI design
++ 70% performance improvement with fewer database calls
++ SQLite migration with data preservation
++ Enhanced security and input validation
+* Complete code architecture refactoring
+* Improved database optimization and integrity
+
 v1.3.0 31 Jul 2025
 ==================
 + Major architectural change: SQLite database support
