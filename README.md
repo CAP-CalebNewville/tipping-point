@@ -1,6 +1,6 @@
 TippingPoint - Aircraft Weight & Balance
 http://www.TippingPointTool.com
-v2.0.0 - 25 Aug 2025
+v2.0.1 - 05 Sep 2025
 ========================================
 
 ##Overview##
@@ -10,7 +10,7 @@ TippingPoint is ideal for flying clubs, flight schools, FBOs, and individual pil
 
 Pilots visit a modern, responsive interface to select their aircraft and input weights. The system provides real-time CG validation, weight limit checking, and safety warnings. Complete preflight weight and balance calculations can be finished in under a minute with professional-grade accuracy.
 
-The current software version is 2.0.0 - a major overhaul with enhanced safety features. View the [changelog](https://github.com/CAP-CalebNewville/tipping-point/blob/main/changelog.txt) for release history.
+The current software version is 2.0.1 - a maintenance release with bug fixes and optimizations following the major 2.0.0 overhaul. View the [changelog](https://github.com/CAP-CalebNewville/tipping-point/blob/main/changelog.txt) for release history.
 
 ##Requirements##
 * A web server with PHP 8.0+
