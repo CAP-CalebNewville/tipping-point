@@ -9,6 +9,18 @@
 + Feature addition
 - Feature removal
 
+v2.0.2 20 Dec 2024
+==================
+* Fixed mixed content error when updating CG envelope points on HTTPS sites
+* Fixed CG envelope point updates not saving to database
+* Fixed "Failed to fetch" error when editing CG points
+* Improved HTTPS detection for proxy and load balancer environments
+* Enhanced support for X-Forwarded-Proto header in proxy configurations
+* Added missing Ajax handler for CG point updates
+* Improved JSON response handling for CG envelope operations
+* Enhanced page refresh after successful CG point updates
+* Removed hardcoded HTTP URLs in favor of dynamic protocol detection
+
 v2.0.1 05 Sep 2025
 ==================
 * Fixed minor UI inconsistencies from 2.0.0 release

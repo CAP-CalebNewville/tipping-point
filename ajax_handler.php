@@ -7,7 +7,7 @@ if (isset($_REQUEST['what'])) {
     switch ($_REQUEST['what']) {
         case "cg":
             $envelope_name = isset($_REQUEST['envelope_name']) ? $_REQUEST['envelope_name'] : 'Normal';
-            if ($_REQUEST['new_arm'] != "" && $_REQUEST['new_weight'] != "") {
+            if (isset($_REQUEST['new_arm']) && $_REQUEST['new_arm'] != "" && isset($_REQUEST['new_weight']) && $_REQUEST['new_weight'] != "") {
                 // Check if this envelope already exists to get its color, or use provided color, or use default
                 $color_query = $db->query("SELECT DISTINCT color FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ? LIMIT 1", [$_REQUEST['tailnumber'], $envelope_name]);
                 $color_result = $db->fetchAssoc($color_query);
@@ -53,6 +53,27 @@ if (isset($_REQUEST['what'])) {
                     'arm' => $_REQUEST['new_arm'],
                     'weight' => $_REQUEST['new_weight'],
                     'envelope_name' => $envelope_name
+                ]);
+            } elseif (isset($_REQUEST['id']) && isset($_REQUEST['cgarm']) && isset($_REQUEST['cgweight'])) {
+                // Update existing CG point
+                $sql_query = "UPDATE aircraft_cg SET arm = ?, weight = ? WHERE id = ?";
+                $db->query($sql_query, [$_REQUEST['cgarm'], $_REQUEST['cgweight'], $_REQUEST['id']]);
+
+                // Enter in the audit log
+                $aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+                $aircraft = $db->fetchAssoc($aircraft_query);
+                $audit_data = ['arm' => $_REQUEST['cgarm'], 'weight' => $_REQUEST['cgweight'], 'cg_id' => $_REQUEST['id'], 'envelope' => $envelope_name];
+                $audit_message = createAuditMessage("Updated CG envelope point", $audit_data);
+                $db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
+
+                // Return JSON response
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'CG point updated successfully',
+                    'id' => $_REQUEST['id'],
+                    'arm' => $_REQUEST['cgarm'],
+                    'weight' => $_REQUEST['cgweight']
                 ]);
             } else {
                 header('Content-Type: application/json');
@@ -330,6 +351,45 @@ if (isset($_REQUEST['what'])) {
             } else {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => 'Envelope name is required']);
+            }
+            break;
+            
+        case "loading_del":
+            // Delete loading zone
+            if (isset($_REQUEST['id']) && !empty($_REQUEST['id'])) {
+                $id = $_REQUEST['id'];
+                
+                // Get loading zone info before deletion for audit log
+                $loading_query = $db->query("SELECT * FROM aircraft_weights WHERE id = ?", [$id]);
+                $loading_info = $db->fetchAssoc($loading_query);
+                
+                if ($loading_info) {
+                    // Delete the loading zone
+                    $db->query("DELETE FROM aircraft_weights WHERE id = ?", [$id]);
+                    
+                    // Enter in the audit log
+                    $aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+                    $aircraft = $db->fetchAssoc($aircraft_query);
+                    $audit_data = [
+                        'id' => $id,
+                        'item' => $loading_info['item'],
+                        'weight' => $loading_info['weight'],
+                        'arm' => $loading_info['arm'],
+                        'type' => $loading_info['type']
+                    ];
+                    $audit_message = createAuditMessage("Deleted aircraft loading item", $audit_data);
+                    $db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
+                    
+                    // Return JSON response
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Loading zone deleted successfully']);
+                } else {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => 'Loading zone not found']);
+                }
+            } else {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Missing loading zone ID']);
             }
             break;
             

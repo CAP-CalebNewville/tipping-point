@@ -46,21 +46,23 @@ if ($is_ajax && isset($_REQUEST['func']) && $_REQUEST['func'] == 'aircraft' && i
     // Include necessary files for Ajax handling
     include_once 'func.inc';
     
-    // Initialize loginlevel and check authentication
+    // Initialize authentication variables
+    $is_authenticated = false;
     $loginlevel = "0";
     $loginuser = isset($_SESSION["loginuser"]) ? $_SESSION["loginuser"] : "";
     $loginpass = isset($_SESSION["loginpass"]) ? $_SESSION["loginpass"] : "";
-    
+
     if (!empty($loginuser) && !empty($loginpass)) {
         $login_query = $db->query("SELECT * FROM users WHERE username = ?", [$loginuser]);
         $pass_verify = $db->fetchAssoc($login_query);
         if ($pass_verify && password_verify($loginpass, $pass_verify['password'])) {
             $loginlevel = $pass_verify['superuser'];
+            $is_authenticated = true;
         }
     }
-    
-    // Check if user is authenticated
-    if ($loginlevel != "1") {
+
+    // Check if user is authenticated (regular users can edit aircraft, they don't need to be superusers)
+    if (!$is_authenticated) {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'error' => 'Authentication required']);
         exit;
@@ -93,11 +95,11 @@ if (!isset($_REQUEST['func']) || $_REQUEST['func'] != "login") {
 			$_SESSION["user_name"] = $pass_verify['name'];
 		} else {
 			// Invalid credentials - redirect with error
-			header('Location: http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?func=login&sysmsg=invalid');
+			header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?func=login&sysmsg=invalid');
 		}
 	} else {
 		// No session data - redirect to login without error
-		header('Location: http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?func=login');
+		header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?func=login');
 	}
 }
 
@@ -263,10 +265,10 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					// Valid login - set session and redirect
 					$_SESSION["loginuser"] = $_REQUEST['username'];
 					$_SESSION["loginpass"] = $_REQUEST['password'];
-					header('Location: http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=login');
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=login');
 				} else {
 					// Invalid login - redirect with error
-					header('Location: http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?func=login&sysmsg=invalid');
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?func=login&sysmsg=invalid');
 				}
     	} else {
     		// print login form
@@ -295,12 +297,12 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
     	//setcookie("loginpass", "", time()-3600);
 			session_unset();
 			session_destroy();
-    	header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=login&sysmsg=logout');
+    	header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=login&sysmsg=logout');
     	break;
 
     case "system":
 	if ($loginlevel!="1") {
-		header('Location: http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=unauthorized');
+		header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=unauthorized');
 	}
 
         echo "<h3 class=\"text-primary mb-3\">System Module</h3>";
@@ -318,7 +320,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'SYSTEM: ' . $audit_message]);
 				}
 			}
-    			header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=system&message=updated');
+    			header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=system&message=updated');
     			break;
 		default:
         		echo "<p class=\"mb-4\">This module adjusts settings that affect the entire software package.</p>";
@@ -493,7 +495,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					];
 					$audit_message = createAuditMessage("Deleted aircraft and all associated data", $audit_data);
 					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'ACDELETE: ' . $audit_message]);
-					header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&sysmsg=acdeleted');
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&sysmsg=acdeleted');
 				} else {
 					echo "<div class=\"alert alert-warning\">\n";
 					echo "<h5 class=\"alert-heading\">Aircraft NOT Deleted</h5>\n";
@@ -641,7 +643,6 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "</div>\n";
 				echo "</div>\n";
 
-				if (isset($_REQUEST['message']) && $_REQUEST['message']=="updated") {echo "<div class=\"alert alert-success text-center\">Aircraft Updated Successfully</div>\n\n";}
 
 				// Aircraft basic information
 				echo "<div class=\"card mb-4\">\n";
@@ -649,7 +650,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "<h4 class=\"card-title mb-0\">Aircraft Basic Information</h4>\n";
 				echo "</div>\n";
 				echo "<div class=\"card-body\">\n";
-				echo "<form method=\"post\" action=\"admin.php\">\n";
+				echo "<form method=\"post\" action=\"admin.php\" onsubmit=\"return submitBasicInformation(event)\">\n";
 				echo "<input type=\"hidden\" name=\"id\" value=\"" . $aircraft['id'] . "\">\n";
 				echo "<input type=\"hidden\" name=\"func\" value=\"aircraft\">\n";
 				echo "<input type=\"hidden\" name=\"func_do\" value=\"edit_do\">\n";
@@ -1382,15 +1383,17 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "  \n";
 				echo "  fetch('admin.php', {\n";
 				echo "    method: 'POST',\n";
+				echo "    headers: {\n";
+				echo "      'X-Requested-With': 'XMLHttpRequest'\n";
+				echo "    },\n";
 				echo "    body: formData\n";
-				echo "  }).then(response => {\n";
-				echo "    if (response.ok) {\n";
+				echo "  }).then(response => response.json()).then(data => {\n";
+				echo "    if (data.success) {\n";
 				echo "      showSuccessMessage('CG point updated successfully');\n";
-				echo "      // Refresh the chart\n";
-				echo "      var chartEmbed = document.querySelector('embed[src*=\"scatter.php\"]');\n";
-				echo "      if (chartEmbed) {\n";
-				echo "        chartEmbed.src = chartEmbed.src.split('?')[0] + '?size=small&tailnumber=' + tailnumber + '&envelope=' + encodeURIComponent(envelope) + '&_t=' + Date.now();\n";
-				echo "      }\n";
+				echo "      // Refresh the page to show updated values\n";
+				echo "      setTimeout(function() {\n";
+				echo "        window.location.reload();\n";
+				echo "      }, 500);\n";
 				echo "    } else {\n";
 				echo "      showErrorMessage('Failed to update CG point');\n";
 				echo "    }\n";
@@ -1513,8 +1516,21 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "  \n";
 				echo "  if (!orderInput || !itemInput || !typeSelect || !weightInput || !armInput) return;\n";
 				echo "  \n";
+				echo "  // Validate required fields\n";
+				echo "  if (!itemInput.value || !itemInput.value.trim()) {\n";
+				echo "    showErrorMessage('Please enter an item name');\n";
+				echo "    return;\n";
+				echo "  }\n";
+				echo "  if (!armInput.value || !armInput.value.trim()) {\n";
+				echo "    showErrorMessage('Please enter an arm value');\n";
+				echo "    return;\n";
+				echo "  }\n";
+				echo "  \n";
+				echo "  // Type-specific validation\n";
+				echo "  var selectedType = typeSelect.value;\n";
+				echo "  \n";
 				echo "  // Validate Empty Weight type uniqueness\n";
-				echo "  if (typeSelect.value === 'Empty Weight') {\n";
+				echo "  if (selectedType === 'Empty Weight') {\n";
 				echo "    var existingEmptyWeight = false;\n";
 				echo "    var typeSelects = document.querySelectorAll('select[name^=\"type\"]');\n";
 				echo "    for (var i = 0; i < typeSelects.length; i++) {\n";
@@ -1528,6 +1544,51 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "      showErrorMessage('Empty Weight type can only exist once per aircraft');\n";
 				echo "      return;\n";
 				echo "    }\n";
+				echo "    if (!weightInput.value || !weightInput.value.trim()) {\n";
+				echo "      showErrorMessage('Empty Weight type requires a Default Value (weight)');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "  } else if (selectedType === 'Variable Weight with limit') {\n";
+				echo "    if (!weightLimitInput || !weightLimitInput.value || !weightLimitInput.value.trim()) {\n";
+				echo "      showErrorMessage('Variable Weight with limit type requires a Max value');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "    if (weightInput.value && weightInput.value.trim() && parseFloat(weightInput.value) < 0) {\n";
+				echo "      showErrorMessage('Default Value (weight) cannot be negative');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "  } else if (selectedType === 'Variable Weight no limit') {\n";
+				echo "    if (!weightInput.value || !weightInput.value.trim()) {\n";
+				echo "      showErrorMessage('Variable Weight no limit type requires a Default Value (weight)');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "    if (parseFloat(weightInput.value) < 0) {\n";
+				echo "      showErrorMessage('Default Value (weight) cannot be negative');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "  } else if (selectedType === 'Fixed Weight Removable') {\n";
+				echo "    if (!weightInput.value || !weightInput.value.trim()) {\n";
+				echo "      showErrorMessage('Fixed Weight Removable type requires a Default Value (weight)');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "  } else if (selectedType === 'Fixed Weight Permanent') {\n";
+				echo "    if (!weightInput.value || !weightInput.value.trim()) {\n";
+				echo "      showErrorMessage('Fixed Weight Permanent type requires a Default Value (weight)');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "  } else if (selectedType === 'Fuel') {\n";
+				echo "    if (!weightLimitInput || !weightLimitInput.value || !weightLimitInput.value.trim()) {\n";
+				echo "      showErrorMessage('Fuel type requires a Max value');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "    if (!weightInput.value || !weightInput.value.trim()) {\n";
+				echo "      showErrorMessage('Fuel type requires a Default Value (weight)');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "    if (parseFloat(weightInput.value) < 0) {\n";
+				echo "      showErrorMessage('Default Value (weight) cannot be negative');\n";
+				echo "      return;\n";
+				echo "    }\n";
 				echo "  }\n";
 				echo "  \n";
 				echo "  var formData = new FormData();\n";
@@ -1538,13 +1599,21 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "  formData.append('order', orderInput.value);\n";
 				echo "  formData.append('item', itemInput.value);\n";
 				echo "  formData.append('type', typeSelect.value);\n";
-				echo "  formData.append('weight_limit', weightLimitInput ? weightLimitInput.value : '');\n";
+				echo "  // Handle weight_limit based on type\n";
+				echo "  if (typeSelect.value === 'Fixed Weight Removable') {\n";
+				echo "    formData.append('weight_limit', weightLimitInput && weightLimitInput.checked ? '1' : '');\n";
+				echo "  } else {\n";
+				echo "    formData.append('weight_limit', weightLimitInput ? weightLimitInput.value : '');\n";
+				echo "  }\n";
 				echo "  formData.append('weight', weightInput.value);\n";
 				echo "  formData.append('arm', armInput.value);\n";
 				echo "  formData.append('tailnumber', tailnumber);\n";
 				echo "  \n";
 				echo "  fetch('admin.php', {\n";
 				echo "    method: 'POST',\n";
+				echo "    headers: {\n";
+				echo "      'X-Requested-With': 'XMLHttpRequest'\n";
+				echo "    },\n";
 				echo "    body: formData\n";
 				echo "  }).then(response => response.json()).then(data => {\n";
 				echo "    if (data.success) {\n";
@@ -1569,6 +1638,9 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "  \n";
 				echo "  fetch('admin.php', {\n";
 				echo "    method: 'POST',\n";
+				echo "    headers: {\n";
+				echo "      'X-Requested-With': 'XMLHttpRequest'\n";
+				echo "    },\n";
 				echo "    body: formData\n";
 				echo "  }).then(response => {\n";
 				echo "    if (response.ok) {\n";
@@ -1642,22 +1714,52 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "      return;\n";
 				echo "    }\n";
 				echo "    if (!weightInput || !weightInput.value || !weightInput.value.trim()) {\n";
-				echo "      showErrorMessage('Empty Weight type requires a weight value');\n";
+				echo "      showErrorMessage('Empty Weight type requires a Default Value (weight)');\n";
 				echo "      return;\n";
 				echo "    }\n";
 				echo "  } else if (selectedType === 'Variable Weight with limit') {\n";
 				echo "    if (!weightLimitInput || !weightLimitInput.value || !weightLimitInput.value.trim()) {\n";
-				echo "      showErrorMessage('Variable Weight with limit type requires a max value');\n";
+				echo "      showErrorMessage('Variable Weight with limit type requires a Max value');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "    if (!weightInput || !weightInput.value || !weightInput.value.trim()) {\n";
+				echo "      showErrorMessage('Variable Weight with limit type requires a Default Value (weight)');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "    if (parseFloat(weightInput.value) < 0) {\n";
+				echo "      showErrorMessage('Default Value (weight) cannot be negative');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "  } else if (selectedType === 'Variable Weight no limit') {\n";
+				echo "    if (!weightInput || !weightInput.value || !weightInput.value.trim()) {\n";
+				echo "      showErrorMessage('Variable Weight no limit type requires a Default Value (weight)');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "    if (parseFloat(weightInput.value) < 0) {\n";
+				echo "      showErrorMessage('Default Value (weight) cannot be negative');\n";
 				echo "      return;\n";
 				echo "    }\n";
 				echo "  } else if (selectedType === 'Fixed Weight Removable') {\n";
 				echo "    if (!weightInput || !weightInput.value || !weightInput.value.trim()) {\n";
-				echo "      showErrorMessage('Fixed Weight Removable type requires a weight value');\n";
+				echo "      showErrorMessage('Fixed Weight Removable type requires a Default Value (weight)');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "  } else if (selectedType === 'Fixed Weight Permanent') {\n";
+				echo "    if (!weightInput || !weightInput.value || !weightInput.value.trim()) {\n";
+				echo "      showErrorMessage('Fixed Weight Permanent type requires a Default Value (weight)');\n";
 				echo "      return;\n";
 				echo "    }\n";
 				echo "  } else if (selectedType === 'Fuel') {\n";
 				echo "    if (!weightLimitInput || !weightLimitInput.value || !weightLimitInput.value.trim()) {\n";
-				echo "      showErrorMessage('Fuel type requires a max value');\n";
+				echo "      showErrorMessage('Fuel type requires a Max value');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "    if (!weightInput || !weightInput.value || !weightInput.value.trim()) {\n";
+				echo "      showErrorMessage('Fuel type requires a Default Value (weight)');\n";
+				echo "      return;\n";
+				echo "    }\n";
+				echo "    if (parseFloat(weightInput.value) < 0) {\n";
+				echo "      showErrorMessage('Default Value (weight) cannot be negative');\n";
 				echo "      return;\n";
 				echo "    }\n";
 				echo "  }\n";
@@ -1842,6 +1944,32 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "  // Insert the new row before the add row\n";
 				echo "  table.insertBefore(newRow, addRow);\n";
 				echo "}\n";
+				echo "\n";
+				echo "// Function to submit basic information form via AJAX\n";
+				echo "function submitBasicInformation(event) {\n";
+				echo "  event.preventDefault();\n";
+				echo "  \n";
+				echo "  var form = event.target;\n";
+				echo "  var formData = new FormData(form);\n";
+				echo "  \n";
+				echo "  fetch('admin.php', {\n";
+				echo "    method: 'POST',\n";
+				echo "    headers: {\n";
+				echo "      'X-Requested-With': 'XMLHttpRequest'\n";
+				echo "    },\n";
+				echo "    body: formData\n";
+				echo "  }).then(response => {\n";
+				echo "    if (response.ok) {\n";
+				echo "      showSuccessMessage('Aircraft Updated Successfully');\n";
+				echo "    } else {\n";
+				echo "      showErrorMessage('Failed to update aircraft');\n";
+				echo "    }\n";
+				echo "  }).catch(error => {\n";
+				echo "    showErrorMessage('Error updating aircraft: ' + error.message);\n";
+				echo "  });\n";
+				echo "  \n";
+				echo "  return false;\n";
+				echo "}\n";
 				echo "</script>\n";
 				echo "</div>\n";
 				echo "</div>\n";
@@ -1896,11 +2024,11 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					];
 					$audit_message = createAuditMessage("Updated aircraft basics", $audit_data);
 					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $_REQUEST['tailnumber'] . ': ' . $audit_message]);
-					header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['id'] . '&message=updated');
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['id'] . '&message=updated');
 					break;
 				case "cg":
 					$envelope_name = isset($_REQUEST['envelope_name']) ? $_REQUEST['envelope_name'] : 'Normal';
-					if ($_REQUEST['new_arm'] != "" && $_REQUEST['new_weight'] != "") {
+					if (isset($_REQUEST['new_arm']) && $_REQUEST['new_arm'] != "" && isset($_REQUEST['new_weight']) && $_REQUEST['new_weight'] != "") {
 						// Check if this envelope already exists to get its color, or use provided color, or use default
 						$color_query = $db->query("SELECT DISTINCT color FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ? LIMIT 1", [$_REQUEST['tailnumber'], $envelope_name]);
 						$color_result = $db->fetchAssoc($color_query);
@@ -1943,7 +2071,8 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 							exit;
 						} else {
 							// Traditional redirect for non-Ajax requests
-							$redirect_url = 'http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($envelope_name) . '&message=updated';
+							$is_https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+							$redirect_url = '' . ($is_https ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($envelope_name) . '&message=updated';
 							header('Location: ' . $redirect_url);
 						}
 					} else {
@@ -1956,8 +2085,19 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 						$audit_data = ['arm' => $_REQUEST['cgarm'], 'weight' => $_REQUEST['cgweight'], 'cg_id' => $_REQUEST['id'], 'envelope' => $envelope_name];
 						$audit_message = createAuditMessage("Updated CG envelope point", $audit_data);
 						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
-						$redirect_url = 'http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($envelope_name) . '&message=updated';
-						header('Location: ' . $redirect_url);
+
+						// Check if this is an Ajax request
+						if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+							// Ajax request - return JSON response
+							header('Content-Type: application/json');
+							echo json_encode(['success' => true, 'message' => 'CG point updated successfully']);
+							exit;
+						} else {
+							// Traditional redirect for non-Ajax requests
+							$is_https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+							$redirect_url = '' . ($is_https ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($envelope_name) . '&message=updated';
+							header('Location: ' . $redirect_url);
+						}
 					}
 					break;
 				case "envelope_delete":
@@ -1979,7 +2119,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					$audit_message = createAuditMessage("Deleted CG envelope", $audit_data);
 					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
 					
-					header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
 					break;
 				case "envelope_edit":
 					// Edit envelope name and/or color
@@ -1995,7 +2135,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 							
 							if ($check_result['count'] > 0) {
 								// Name conflict - redirect with error (could be enhanced with error message)
-								header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($old_envelope_name) . '&error=name_conflict');
+								header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($old_envelope_name) . '&error=name_conflict');
 								break;
 							}
 						}
@@ -2015,7 +2155,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 						$audit_message = createAuditMessage("Updated CG envelope", $audit_data);
 						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
 						
-						$redirect_url = 'http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($new_envelope_name) . '&message=updated';
+						$redirect_url = '' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($new_envelope_name) . '&message=updated';
 						header('Location: ' . $redirect_url);
 					}
 					break;
@@ -2037,7 +2177,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					];
 					$audit_message = createAuditMessage("Deleted CG envelope point", $audit_data);
 					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
-					header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
 					break;
 				case "loading":
 					if (isset($_REQUEST['new_item']) && $_REQUEST['new_item'] && isset($_REQUEST['new_arm']) && $_REQUEST['new_arm'] != "") {
@@ -2106,7 +2246,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 							exit;
 						} else {
 							// Traditional redirect for non-Ajax requests
-							header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+							header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
 						}
 					} else {
 						// SQL query to edit loading zones with new type system
@@ -2145,7 +2285,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 						}
 						$audit_message = createAuditMessage("Updated aircraft loading item", $audit_data);
 						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
-						header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+						header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
 					}
 					break;
 				case "loading_del":
@@ -2168,7 +2308,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					];
 					$audit_message = createAuditMessage("Deleted aircraft loading item", $audit_data);
 					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
-					header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
 			}
 
 			break;
@@ -2201,7 +2341,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				];
 				$audit_message = createAuditMessage("Created new user", $audit_data);
 				$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'USERS: ' . $audit_message]);
-				header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=added');
+				header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=added');
 			} else {
 				echo "<div class=\"row justify-content-center\">\n";
 				echo "<div class=\"col-lg-8 col-md-10\">\n";
@@ -2279,7 +2419,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				];
 				$audit_message = createAuditMessage("Updated user", $audit_data);
 				$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'USERS: ' . $audit_message]);
-//				header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=edited');
+//				header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=edited');
 			} elseif (isset($_REQUEST['what']) && $_REQUEST['what']=="Delete") {
 				// Get user info before deletion for audit log
 				$user_query = $db->query("SELECT * FROM users WHERE id = ?", [$_REQUEST['id']]);
@@ -2296,7 +2436,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				];
 				$audit_message = createAuditMessage("Deleted user", $audit_data);
 				$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'USERS: ' . $audit_message]);
-				header('Location: http://' . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=deleted');
+				header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=deleted');
 			} else {
 				$result = $db->query("SELECT * FROM users WHERE id = ?", [$_REQUEST['id']]);
 				$row = $db->fetchAssoc($result);
@@ -2369,7 +2509,9 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				if ($row['superuser']=="1") { echo "Yes"; } else { echo "No"; }
 				echo "</td><td>\n";
 				if ($loginuser==$row['username'] || $loginlevel=="1") {
-					echo "<input type=\"button\" name=\"edit\" value=\"Edit\" onClick=\"parent.location='http://" . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . "?func=users&amp;func_do=edit&amp;id=" . $row['id'] . "'\">\n";
+					$is_https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+				$protocol = $is_https ? 'https://' : 'http://';
+				echo "<input type=\"button\" name=\"edit\" value=\"Edit\" onClick=\"parent.location='" . $protocol . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . "?func=users&amp;func_do=edit&amp;id=" . $row['id'] . "'\">\n";
 				} else { echo "&nbsp;"; }
 				echo "</td></tr>\n";
 			}
@@ -2384,7 +2526,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 
     case "audit":
 	if ($loginlevel!="1") {
-		header('Location: http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=unauthorized');
+		header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=unauthorized');
 	}
 
     	echo "<h3 class=\"text-primary mb-4\">Audit Log</h3>";
