@@ -393,6 +393,29 @@ if (isset($_REQUEST['what'])) {
             }
             break;
             
+        case "basics":
+            $active = isset($_REQUEST['active']) && $_REQUEST['active'] != '' ? $_REQUEST['active'] : '0';
+            $mlw_value = isset($_REQUEST['max_landing_weight']) && $_REQUEST['max_landing_weight'] !== '' ? $_REQUEST['max_landing_weight'] : null;
+            $sql_query = "UPDATE aircraft SET active = ?, tailnumber = ?, makemodel = ?, emptywt = ?, emptycg = ?, maxwt = ?, fuelunit = ?, weight_units = ?, arm_units = ?, fuel_type = ?, max_landing_weight = ? WHERE id = ?";
+            $db->query($sql_query, [$active, $_REQUEST['tailnumber'], $_REQUEST['makemodel'], $_REQUEST['emptywt'], $_REQUEST['emptycg'], $_REQUEST['maxwt'], $_REQUEST['fuelunit'], $_REQUEST['weight_units'], $_REQUEST['arm_units'], $_REQUEST['fuel_type'], $mlw_value, $_REQUEST['id']]);
+            $audit_data = [
+                'active' => $active,
+                'tailnumber' => $_REQUEST['tailnumber'],
+                'makemodel' => $_REQUEST['makemodel'],
+                'emptywt' => $_REQUEST['emptywt'],
+                'emptycg' => $_REQUEST['emptycg'],
+                'maxwt' => $_REQUEST['maxwt'],
+                'fuelunit' => $_REQUEST['fuelunit'],
+                'weight_units' => $_REQUEST['weight_units'],
+                'fuel_type' => $_REQUEST['fuel_type'],
+                'max_landing_weight' => $mlw_value
+            ];
+            $audit_message = createAuditMessage("Updated aircraft basics", $audit_data);
+            $db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $_REQUEST['tailnumber'] . ': ' . $audit_message]);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Aircraft updated successfully']);
+            break;
+
         default:
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'error' => 'Unknown action']);

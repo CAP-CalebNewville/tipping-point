@@ -6,7 +6,7 @@
 if (defined('COMMON_INC_LOADED')) return;
 define('COMMON_INC_LOADED', true);
 
-$ver = "2.0.2";
+$ver = "2.0.3";
 $tabindex=1;
 
 function PageHeader($site_name) {

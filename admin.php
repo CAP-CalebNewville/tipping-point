@@ -1958,11 +1958,11 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "      'X-Requested-With': 'XMLHttpRequest'\n";
 				echo "    },\n";
 				echo "    body: formData\n";
-				echo "  }).then(response => {\n";
-				echo "    if (response.ok) {\n";
+				echo "  }).then(response => response.json()).then(data => {\n";
+				echo "    if (data.success) {\n";
 				echo "      showSuccessMessage('Aircraft Updated Successfully');\n";
 				echo "    } else {\n";
-				echo "      showErrorMessage('Failed to update aircraft');\n";
+				echo "      showErrorMessage('Failed to update aircraft: ' + (data.error || 'Unknown error'));\n";
 				echo "    }\n";
 				echo "  }).catch(error => {\n";
 				echo "    showErrorMessage('Error updating aircraft: ' + error.message);\n";
