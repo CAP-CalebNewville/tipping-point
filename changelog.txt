@@ -9,6 +9,19 @@
 + Feature addition
 - Feature removal
 
+v2.0.4 20 Jul 2026
+==================
+* Fixed blank page returned when saving changes on the Users edit form
+* Fixed new user not being added when the Administrator option was unchecked
+* Normalized the superuser checkbox value before insert to satisfy the NOT NULL column
+
+v2.0.3 24 Feb 2026
+==================
+* Fixed Aircraft Basic Information changes not being saved to the database
+* Fixed AJAX handler routing that caused basics form submissions to silently fail
+* Fixed success toast displaying regardless of whether the update occurred
+* Added missing Ajax handler for aircraft basic information updates
+
 v2.0.2 20 Dec 2024
 ==================
 * Fixed mixed content error when updating CG envelope points on HTTPS sites
