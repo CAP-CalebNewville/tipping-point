@@ -2329,15 +2329,17 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 	switch (isset($_REQUEST["func_do"]) ? $_REQUEST["func_do"] : "") {
 		case "add":
 			if (isset($_REQUEST['what']) && $_REQUEST['what']=="Add") {
+				if (isset($_REQUEST['superuser']) && $_REQUEST['superuser']=="1") { $add_superuser = "1"; }
+				else { $add_superuser = "0"; }
 				// SQL query to add a new user
 				$sql_query = "INSERT INTO users (`username`, `password`, `name`, `email`, `superuser`) VALUES (?, ?, ?, ?, ?)";
-				$db->query($sql_query, [$_REQUEST['username'], password_hash($_REQUEST['password'], PASSWORD_DEFAULT), $_REQUEST['name'], $_REQUEST['email'], $_REQUEST['superuser']]);
+				$db->query($sql_query, [$_REQUEST['username'], password_hash($_REQUEST['password'], PASSWORD_DEFAULT), $_REQUEST['name'], $_REQUEST['email'], $add_superuser]);
 				// Enter in the audit log
 				$audit_data = [
 					'username' => $_REQUEST['username'],
 					'name' => $_REQUEST['name'],
 					'email' => $_REQUEST['email'],
-					'superuser' => $_REQUEST['superuser']
+					'superuser' => $add_superuser
 				];
 				$audit_message = createAuditMessage("Created new user", $audit_data);
 				$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'USERS: ' . $audit_message]);
@@ -2419,7 +2421,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				];
 				$audit_message = createAuditMessage("Updated user", $audit_data);
 				$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'USERS: ' . $audit_message]);
-//				header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=edited');
+				header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=edited');
 			} elseif (isset($_REQUEST['what']) && $_REQUEST['what']=="Delete") {
 				// Get user info before deletion for audit log
 				$user_query = $db->query("SELECT * FROM users WHERE id = ?", [$_REQUEST['id']]);
