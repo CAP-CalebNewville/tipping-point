@@ -41,14 +41,14 @@ session_start();
 
 // Check if user is authenticated and is administrator
 $loginuser = isset($_SESSION["loginuser"]) ? $_SESSION["loginuser"] : "";
-$loginpass = isset($_SESSION["loginpass"]) ? $_SESSION["loginpass"] : "";
+$authenticated = !empty($_SESSION["authenticated"]);
 $loginlevel = "0";
 
-// Check if user has session data
-if (!empty($loginuser) && !empty($loginpass)) {
+// Check if user has an authenticated session
+if (!empty($loginuser) && $authenticated) {
     $login_query = $db->query("SELECT * FROM users WHERE username = ?", [$loginuser]);
     $pass_verify = $db->fetchAssoc($login_query);
-    if ($pass_verify && password_verify($loginpass, $pass_verify['password'])) {
+    if ($pass_verify) {
         $loginlevel = $pass_verify['superuser'];
     }
 }

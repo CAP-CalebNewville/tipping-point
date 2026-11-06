@@ -50,12 +50,12 @@ if ($is_ajax && isset($_REQUEST['func']) && $_REQUEST['func'] == 'aircraft' && i
     $is_authenticated = false;
     $loginlevel = "0";
     $loginuser = isset($_SESSION["loginuser"]) ? $_SESSION["loginuser"] : "";
-    $loginpass = isset($_SESSION["loginpass"]) ? $_SESSION["loginpass"] : "";
+    $authenticated = !empty($_SESSION["authenticated"]);
 
-    if (!empty($loginuser) && !empty($loginpass)) {
+    if (!empty($loginuser) && $authenticated) {
         $login_query = $db->query("SELECT * FROM users WHERE username = ?", [$loginuser]);
         $pass_verify = $db->fetchAssoc($login_query);
-        if ($pass_verify && password_verify($loginpass, $pass_verify['password'])) {
+        if ($pass_verify) {
             $loginlevel = $pass_verify['superuser'];
             $is_authenticated = true;
         }
@@ -84,22 +84,24 @@ $loginlevel = "0";
 
 if (!isset($_REQUEST['func']) || $_REQUEST['func'] != "login") {
 	$loginuser = isset($_SESSION["loginuser"]) ? $_SESSION["loginuser"] : "";
-	$loginpass = isset($_SESSION["loginpass"]) ? $_SESSION["loginpass"] : "";
+	$authenticated = !empty($_SESSION["authenticated"]);
 
-	// Check if user has session data
-	if (!empty($loginuser) && !empty($loginpass)) {
+	// Check if user has an authenticated session
+	if (!empty($loginuser) && $authenticated) {
 		$login_query = $db->query("SELECT * FROM users WHERE username = ?", [$loginuser]);
 		$pass_verify = $db->fetchAssoc($login_query);
-		if ($pass_verify && password_verify($loginpass, $pass_verify['password'])) {
+		if ($pass_verify) {
 			$loginlevel = $pass_verify['superuser'];
 			$_SESSION["user_name"] = $pass_verify['name'];
 		} else {
 			// Invalid credentials - redirect with error
 			header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?func=login&sysmsg=invalid');
+			exit;
 		}
 	} else {
 		// No session data - redirect to login without error
 		header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?func=login');
+		exit;
 	}
 }
 
@@ -262,9 +264,12 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				$user_data = $db->fetchAssoc($login_query);
 				
 				if ($user_data && password_verify($_REQUEST['password'], $user_data['password'])) {
-					// Valid login - set session and redirect
+					// Valid login - set session and redirect.
+					// Regenerate the session id to prevent session fixation, and store
+					// only an authentication flag - never the plaintext password.
+					session_regenerate_id(true);
 					$_SESSION["loginuser"] = $_REQUEST['username'];
-					$_SESSION["loginpass"] = $_REQUEST['password'];
+					$_SESSION["authenticated"] = true;
 					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=login');
 				} else {
 					// Invalid login - redirect with error
@@ -303,6 +308,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
     case "system":
 	if ($loginlevel!="1") {
 		header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=unauthorized');
+		exit;
 	}
 
         echo "<h3 class=\"text-primary mb-3\">System Module</h3>";
@@ -2322,6 +2328,10 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
         break;
 
     case "users":
+	if ($loginlevel!="1") {
+		header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=unauthorized');
+		exit;
+	}
         echo "<h3 class=\"text-primary mb-3\">Users Module</h3>";
         if (isset($_REQUEST['message']) && $_REQUEST['message']=="added") { echo "<p style=\"color: #00AA00; text-align: center;\">User account added.</p>\n\n";
         } elseif (isset($_REQUEST['message']) && $_REQUEST['message']=="edited") { echo "<p style=\"color: #00AA00; text-align: center;\">User account edited.</p>\n\n";
@@ -2507,7 +2517,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 			echo "<tr><th>Username</th><th>Name</th><th>Admin</th><th>&nbsp;</th></tr>\n";
 			$result = $db->query("SELECT * FROM users ORDER BY `name`");
 			while($row = $db->fetchArray($result)) {
-				echo "<tr><td>" . $row['username'] . "</td><td>" . $row['name'] . "</td><td>";
+				echo "<tr><td>" . htmlspecialchars($row['username']) . "</td><td>" . htmlspecialchars($row['name']) . "</td><td>";
 				if ($row['superuser']=="1") { echo "Yes"; } else { echo "No"; }
 				echo "</td><td>\n";
 				if ($loginuser==$row['username'] || $loginlevel=="1") {
@@ -2529,6 +2539,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
     case "audit":
 	if ($loginlevel!="1") {
 		header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=unauthorized');
+		exit;
 	}
 
     	echo "<h3 class=\"text-primary mb-4\">Audit Log</h3>";

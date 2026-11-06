@@ -124,6 +124,20 @@ if (isSystemInstalled() && (!isset($_REQUEST['func']) || $_REQUEST['func']==""))
 				include 'database.inc';
 				$db = getDB();
 				
+				// SECURITY: the installer must only create the FIRST administrator.
+				// If any user already exists the system is already set up, so refuse
+				// to run again. This stops the installer from being replayed to inject
+				// rogue superuser accounts (unauthenticated account creation).
+				$existing_users = $db->fetchAssoc($db->query("SELECT COUNT(*) AS c FROM users"));
+				if ($existing_users && intval($existing_users['c']) > 0) {
+					echo "<div class='alert alert-danger text-center'>";
+					echo "Setup has already been completed. The installer is disabled.";
+					echo "<br>To reinstall, first remove the existing database.";
+					echo "</div>";
+					echo "<div class='text-center mt-3'><a href='admin.php' class='btn btn-primary'>Go to Admin</a></div>";
+					break;
+				}
+
 				// Create administrator user
 				$hashedPassword = password_hash($_REQUEST['password'], PASSWORD_DEFAULT);
 				$db->query("INSERT INTO users (username, password, name, email, superuser) VALUES (?, ?, ?, ?, 1)", [
@@ -174,7 +188,7 @@ Options -Indexes
 # Security headers
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options nosniff
-    Header always set X-Frame-Options DENY
+    Header always set X-Frame-Options SAMEORIGIN
     Header always set X-XSS-Protection \"1; mode=block\"
     Header always set Referrer-Policy \"strict-origin-when-cross-origin\"
 </IfModule>

@@ -1,0 +1,16 @@
+# Deny ALL web access to this directory. The SQLite database lives here and
+# must never be downloadable over HTTP. This is defense-in-depth and only takes
+# effect if the server allows .htaccess overrides for this path (AllowOverride).
+# The authoritative protection is a server-level <Directory> deny or moving this
+# directory outside the web root - see RELEASE_NOTES / SECURITY.md.
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+# Apache 2.2 and earlier
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

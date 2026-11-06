@@ -111,10 +111,10 @@ if ($_REQUEST['tailnumber']=="") {
 	$aircraft = $db->fetchAssoc($aircraft_result);
 
 	if (!$aircraft) {
-		header("Location: http://" . $_SERVER["SERVER_NAME"] . $_SERVER["PHP_SELF"] . "?message=invalid");
+		header("Location: " . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["SERVER_NAME"] . $_SERVER["PHP_SELF"] . "?message=invalid");
 		exit;
 	} elseif ($aircraft['active']=="0") {
-		header("Location: http://" . $_SERVER["SERVER_NAME"] . $_SERVER["PHP_SELF"] . "?message=inactive");
+		header("Location: " . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["SERVER_NAME"] . $_SERVER["PHP_SELF"] . "?message=inactive");
 		exit;
 	}
 
@@ -165,17 +165,17 @@ var df = document.forms[0];
 foreach($weights_data as $weights) {
 	if (isset($weights['type']) && $weights['type'] == 'Fuel') {
 		echo "df.line" . $weights['id'] . "_gallons_to.value = ";
-			if (empty($_REQUEST["line" . $weights['id'] . "_gallons_to"])) {echo($weights['weight']);} else { echo($_REQUEST["line" . $weights['id'] . "_gallons_to"]); }
+			if (empty($_REQUEST["line" . $weights['id'] . "_gallons_to"])) {echo($weights['weight']);} else { echo(floatval($_REQUEST["line" . $weights['id'] . "_gallons_to"])); }
 			echo ";\n";
 		$fuel_weight_per_unit = getFuelWeightPerUnit($aircraft['fuel_type'], $aircraft['fuelunit'], $aircraft['weight_units']);
 		echo "df.line" . $weights['id'] . "_wt_to.value = ";
-			if (empty($_REQUEST["line" . $weights['id'] . "_gallons_to"])) {echo(($weights['weight'] * $fuel_weight_per_unit));} else {echo(($_REQUEST["line" . $weights['id'] . "_gallons_to"] * $fuel_weight_per_unit));}
+			if (empty($_REQUEST["line" . $weights['id'] . "_gallons_to"])) {echo(($weights['weight'] * $fuel_weight_per_unit));} else {echo((floatval($_REQUEST["line" . $weights['id'] . "_gallons_to"]) * $fuel_weight_per_unit));}
 			echo ";\n";
 		echo "df.line" . $weights['id'] . "_gallons_ldg.value = ";
-			if (empty($_REQUEST["line" . $weights['id'] . "_gallons_ldg"])) {echo($weights['weight']);} else { echo($_REQUEST["line" . $weights['id'] . "_gallons_ldg"]); }
+			if (empty($_REQUEST["line" . $weights['id'] . "_gallons_ldg"])) {echo($weights['weight']);} else { echo(floatval($_REQUEST["line" . $weights['id'] . "_gallons_ldg"])); }
 			echo ";\n";
 		echo "df.line" . $weights['id'] . "_wt_ldg.value = ";
-			if (empty($_REQUEST["line" . $weights['id'] . "_gallons_ldg"])) {echo(($weights['weight'] * $fuel_weight_per_unit));} else {echo(($_REQUEST["line" . $weights['id'] . "_gallons_ldg"] * $fuel_weight_per_unit));}
+			if (empty($_REQUEST["line" . $weights['id'] . "_gallons_ldg"])) {echo(($weights['weight'] * $fuel_weight_per_unit));} else {echo((floatval($_REQUEST["line" . $weights['id'] . "_gallons_ldg"]) * $fuel_weight_per_unit));}
 			echo ";\n";
 	} else {
 		if (isset($weights['type']) && $weights['type'] == 'Fixed Weight Removable') {
@@ -193,7 +193,7 @@ foreach($weights_data as $weights) {
 			echo ";\n";
 		} else {
 			echo "df.line" . $weights['id'] . "_wt.value = ";
-				if (empty($_REQUEST["line" . $weights['id'] . "_wt"])) { echo($weights['weight']); } else { echo($_REQUEST["line" . $weights['id'] . "_wt"]); }
+				if (empty($_REQUEST["line" . $weights['id'] . "_wt"])) { echo($weights['weight']); } else { echo(floatval($_REQUEST["line" . $weights['id'] . "_wt"])); }
 				echo  ";\n";
 		}
 	}
