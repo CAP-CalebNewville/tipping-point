@@ -9,6 +9,15 @@
 + Feature addition
 - Feature removal
 
+v2.0.5 06 Nov 2026
+==================
+* Security: fixed unauthenticated creation of administrator accounts through the admin users handler and the setup installer
+* Security: added an authorization check to user management and made all authentication redirects stop execution
+* Security: the setup installer now refuses to run once a user account exists, preventing installer replay
+* Security: removed plaintext password storage from the session and added session ID regeneration on login
+* Security: escaped user-controlled output to prevent cross-site scripting on the weight & balance form and the admin users list
+* Security: added deny rules for the data directory and include/database files (effective when AllowOverride is enabled)
+
 v2.0.4 20 Jul 2026
 ==================
 * Fixed blank page returned when saving changes on the Users edit form
