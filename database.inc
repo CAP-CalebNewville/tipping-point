@@ -215,9 +215,6 @@ class DatabaseConnection {
             emptywt REAL NOT NULL,
             emptycg REAL NOT NULL,
             maxwt REAL NOT NULL,
-            cglimits TEXT NULL,
-            cgwarnfwd REAL NULL,
-            cgwarnaft REAL NULL,
             fuelunit TEXT NOT NULL,
             weight_units TEXT NOT NULL DEFAULT 'Pounds',
             arm_units TEXT NOT NULL DEFAULT 'Inches',
@@ -298,7 +295,13 @@ if (!function_exists('getDB')) {
 }
 
 if (!function_exists('createSQLiteDatabase')) {
-function createSQLiteDatabase() {
+function createSQLiteDatabase($include_legacy_columns = true) {
+    // The legacy CG columns (cglimits, cgwarnfwd, cgwarnaft) exist only so that rows
+    // copied from old MySQL installs by admin_migrate.php can be inserted as-is.
+    // Fresh installs (setup.php) pass false so no cleanup step is needed afterwards.
+    $legacy_columns = $include_legacy_columns
+        ? "            cglimits TEXT NULL,\n            cgwarnfwd REAL NULL,\n            cgwarnaft REAL NULL,\n"
+        : "";
     $dataDir = dirname(__FILE__) . '/data';
     if (!is_dir($dataDir)) {
         if (!mkdir($dataDir, 0755, true)) {
@@ -322,10 +325,7 @@ function createSQLiteDatabase() {
             emptywt REAL NOT NULL,
             emptycg REAL NOT NULL,
             maxwt REAL NOT NULL,
-            cglimits TEXT NULL,
-            cgwarnfwd REAL NULL,
-            cgwarnaft REAL NULL,
-            fuelunit TEXT NOT NULL,
+{$legacy_columns}            fuelunit TEXT NOT NULL,
             weight_units TEXT NOT NULL DEFAULT 'Pounds',
             arm_units TEXT NOT NULL DEFAULT 'Inches',
             fuel_type TEXT NOT NULL DEFAULT '100LL/Mogas',

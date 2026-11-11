@@ -29,7 +29,7 @@ if (isSystemInstalled() && (!isset($_REQUEST['func']) || ($_REQUEST['func'] ?? n
 			// Requirements check passed, create SQLite database
 			try {
 				include 'database.inc';
-				$pdo = createSQLiteDatabase();
+				$pdo = createSQLiteDatabase(false);
 				
 				echo "<div class='alert alert-success'>";
 				echo "<h5 class='alert-heading'>Database Created Successfully!</h5>";
