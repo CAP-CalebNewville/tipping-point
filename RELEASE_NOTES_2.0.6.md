@@ -28,12 +28,12 @@ TippingPoint 2.0.6 fixes a packaging problem that broke new installs and upgrade
 
 ## 📋 Upgrade Notes
 
-**If you installed or upgraded to 2.0.0–2.0.5 and never ran the setup flow**, your installation contains the bundled development administrator account (username `inetwiz`). Please:
+**If you installed or upgraded to 2.0.0–2.0.5 and never ran the setup flow**, your installation contains an administrator account that came bundled with the package. Please:
 
-1. Log in and create your own administrator account on the Users page.
-2. Delete the `inetwiz` account.
+1. Open the Users page and review every account. Create your own administrator account if you don't have one.
+2. Delete any account you did not create.
 
-Installations where you created your own administrator, or a fresh install into an empty `data/` directory, are not affected by the bundled account, but should still verify that no `inetwiz` user exists.
+Installations where you created your own administrator, or a fresh install into an empty `data/` directory, should still review the Users list to confirm no unfamiliar accounts exist.
 
 **Upgrading from the old MySQL-based versions (pre-2.0)**: if a `data/tippingpoint.db` file was placed there by a 2.0.x package, move it aside before upgrading so the migration flow (`admin_migrate.php`) can run against your `config.inc`.
 
