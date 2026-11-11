@@ -9,6 +9,14 @@
 + Feature addition
 - Feature removal
 
+v2.0.6 10 Nov 2026
+==================
+* Fixed releases shipping a development database (data/tippingpoint.db) containing a pre-created administrator account; new installs now run the setup flow and upgrades from MySQL-based versions now reach the migration flow
+* Fixed "Undefined variable $current_envelope_color" breaking the admin page JavaScript (Create Envelope appeared to fail) on aircraft with no CG envelopes
+* Fixed "Undefined array key" warnings on the aircraft selection page (index.php) when tailnumber or message are absent
+* Fixed PHP 8.5 deprecation of curl_close()
+* data/*.db files are now excluded from version control
+
 v2.0.5 06 Nov 2026
 ==================
 * Security: fixed unauthenticated creation of administrator accounts through the admin users handler and the setup installer

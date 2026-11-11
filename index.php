@@ -72,7 +72,7 @@ body { padding-top: 0 !important; }
 </style>
 
 <?php
-if ($_REQUEST['tailnumber']=="") {
+if (empty($_REQUEST['tailnumber'])) {
 // NO AIRCRAFT SPECIFIED, SHOW ACTIVE AIRCRAFT LIST
 	echo "<body>\n";
 	echo "<div class=\"container\">\n";
@@ -83,8 +83,8 @@ if ($_REQUEST['tailnumber']=="") {
 	echo "<h3 class=\"mb-0\">" . $config['site_name'] . "</h3>\n";
 	echo "</div>\n";
 	echo "<div class=\"card-body\">\n";
-	if ($_REQUEST['message']=="invalid") { echo "<div class=\"alert alert-warning text-center\">You have selected an invalid aircraft.</div>\n\n";
-        } elseif ($_REQUEST['message']=="inactive") { echo "<div class=\"alert alert-warning text-center\">The aircraft you have selected is currently inactive.</div>\n\n"; }
+	if (($_REQUEST['message'] ?? '')=="invalid") { echo "<div class=\"alert alert-warning text-center\">You have selected an invalid aircraft.</div>\n\n";
+        } elseif (($_REQUEST['message'] ?? '')=="inactive") { echo "<div class=\"alert alert-warning text-center\">The aircraft you have selected is currently inactive.</div>\n\n"; }
 	echo "<h5 class=\"card-title\">Select Aircraft</h5>\n";
 	echo "<p class=\"text-muted\">Choose an aircraft to perform weight and balance calculations.</p>\n";
 

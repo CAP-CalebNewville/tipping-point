@@ -812,6 +812,8 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				}
 				
 				// If no envelopes exist, show info message
+				// Default used by the generated JavaScript even when no envelopes exist yet
+				$current_envelope_color = 'primary';
 				if (empty($envelopes)) {
 					echo "<div class=\"alert alert-info text-center\">\n";
 					echo "<h6>No CG Envelopes Defined</h6>\n";
@@ -1454,7 +1456,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				echo "}\n";
 				echo "\n";
 				echo "function addCGPoint(tailnumber, envelope, envelopeColor) {\n";
-				echo "  if (!envelopeColor) envelopeColor = '" . $current_envelope_color . "';\n";
+				echo "  if (!envelopeColor) envelopeColor = " . json_encode($current_envelope_color) . ";\n";
 				echo "  \n";
 				echo "  var armInput = document.querySelector('input[name=\"new_arm\"]');\n";
 				echo "  var weightInput = document.querySelector('input[name=\"new_weight\"]');\n";

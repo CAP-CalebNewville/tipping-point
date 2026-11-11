@@ -1,0 +1,4 @@
+# Runtime data - never ship a live database
+data/*.db
+data/*.db-*
+data/*.bak

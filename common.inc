@@ -6,7 +6,7 @@
 if (defined('COMMON_INC_LOADED')) return;
 define('COMMON_INC_LOADED', true);
 
-$ver = "2.0.5";
+$ver = "2.0.6";
 $tabindex=1;
 
 function PageHeader($site_name) {
@@ -145,7 +145,7 @@ function checkHtaccessSupport() {
             $response = curl_exec($ch);
             $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $curl_error = curl_error($ch);
-            curl_close($ch);
+            if (PHP_VERSION_ID < 80000) { curl_close($ch); } // no-op since 8.0, deprecated in 8.5
             
             if ($response !== false && empty($curl_error)) {
                 $http_test_successful = true;
