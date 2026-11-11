@@ -15,6 +15,9 @@ v2.0.6 10 Nov 2026
 * Fixed "Undefined variable $current_envelope_color" breaking the admin page JavaScript (Create Envelope appeared to fail) on aircraft with no CG envelopes
 * Fixed "Undefined array key" warnings on the aircraft selection page (index.php) when tailnumber or message are absent
 * Fixed PHP 8.5 deprecation of curl_close()
+* Fixed "Undefined array key" warnings for missing request/session values throughout admin.php, ajax_handler.php, index.php, scatter.php and setup.php
+* Fixed "Trying to access array offset on false" warnings when editing or deleting records that no longer exist; Edit User now reports "User not found"
+* Fixed an uncaught database exception when adding a user without a username
 * data/*.db files are now excluded from version control
 
 v2.0.5 06 Nov 2026

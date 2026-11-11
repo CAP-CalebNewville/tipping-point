@@ -23,6 +23,10 @@ TippingPoint 2.0.6 fixes a packaging problem that broke new installs and upgrade
 - **CG envelopes**: Creating an envelope on an aircraft with no envelopes defined produced `Undefined variable $current_envelope_color`. The warning was written into the page's JavaScript, which broke Create Envelope and other admin scripts. The value is now always initialized and safely encoded. *(Reported by a user running PHP 8.5.)*
 - **Aircraft selection page**: `Undefined array key "tailnumber"` / `"message"` warnings appeared after "Choose Another Aircraft" or when opening `index.php` directly. *(Reported by a user running PHP 8.5.)*
 - **PHP 8.5**: `curl_close()` is deprecated; it is now only called on PHP versions where it is required.
+- **Undefined array key warnings (PHP 8.x)**: Every read of request (`$_REQUEST`/`$_GET`/`$_POST`) and session values in `admin.php`, `ajax_handler.php`, `index.php`, `scatter.php` and `setup.php` now tolerates a missing key. Previously, opening a page without its expected parameters (for example `scatter.php` with no aircraft) printed warnings into the page.
+- **Missing records**: Deleting or editing a CG point, envelope, loading item or user that no longer exists, or opening the Edit User page with an unknown id, produced `Trying to access array offset on false` warnings. These cases are now handled quietly, and Edit User shows "User not found".
+- **Add User**: submitting the add-user form without a username caused an uncaught database exception; it now redisplays the form.
+- **Deprecated null arguments**: passing a missing value to `trim()`, `htmlspecialchars()`, `password_hash()` and `password_verify()` (deprecated in PHP 8.1+) is fixed.
 
 ---
 
@@ -43,8 +47,8 @@ Installations where you created your own administrator, or a fresh install into 
 
 ## 🔧 Files Modified
 
-- `admin.php` — initialize `$current_envelope_color` and JSON-encode it in generated JavaScript
-- `index.php` — guard optional `tailnumber` / `message` request parameters
+- `admin.php` — initialize `$current_envelope_color` and JSON-encode it in generated JavaScript; tolerate missing request/session keys and missing records; "User not found" handling; require a username when adding a user
+- `ajax_handler.php`, `scatter.php`, `setup.php`, `index.php` — tolerate missing request keys
 - `common.inc` — PHP 8.5 `curl_close()` deprecation; version bump to 2.0.6
 - `.gitignore` — exclude `data/*.db`, `data/*.db-*`, `data/*.bak`
 - `data/tippingpoint.db` — removed from the repository

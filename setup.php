@@ -16,7 +16,7 @@ PageHeader("Initial Setup");
 
 <?php
 // Check if already installed
-if (isSystemInstalled() && (!isset($_REQUEST['func']) || $_REQUEST['func']=="")) {
+if (isSystemInstalled() && (!isset($_REQUEST['func']) || ($_REQUEST['func'] ?? null)=="")) {
 	echo "<div class='alert alert-info text-center'>TippingPoint is already installed.</div>";
 	echo "<div class='text-center mt-3'>";
 	echo "<a href='index.php' class='btn btn-primary'>Go to Application</a> ";
@@ -24,7 +24,7 @@ if (isSystemInstalled() && (!isset($_REQUEST['func']) || $_REQUEST['func']==""))
 	echo "</div>";
 
 } else {
-	switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
+	switch (($_REQUEST["func"] ?? "")) {
 		case "step2":
 			// Requirements check passed, create SQLite database
 			try {
@@ -72,9 +72,9 @@ if (isSystemInstalled() && (!isset($_REQUEST['func']) || $_REQUEST['func']==""))
 				
 				// Insert system settings
 				$settings = [
-					['site_name', $_REQUEST['site_name']],
-					['administrator', $_REQUEST['administrator']],
-					['timezone', $_REQUEST['timezone']],
+					['site_name', ($_REQUEST['site_name'] ?? null)],
+					['administrator', ($_REQUEST['administrator'] ?? null)],
+					['timezone', ($_REQUEST['timezone'] ?? null)],
 					['update_check', time()],
 					['update_version', $ver],
 					['database_type', 'sqlite'],
@@ -139,17 +139,17 @@ if (isSystemInstalled() && (!isset($_REQUEST['func']) || $_REQUEST['func']==""))
 				}
 
 				// Create administrator user
-				$hashedPassword = password_hash($_REQUEST['password'], PASSWORD_DEFAULT);
+				$hashedPassword = password_hash(($_REQUEST['password'] ?? ''), PASSWORD_DEFAULT);
 				$db->query("INSERT INTO users (username, password, name, email, superuser) VALUES (?, ?, ?, ?, 1)", [
-					$_REQUEST['username'],
+					($_REQUEST['username'] ?? null),
 					$hashedPassword,
-					$_REQUEST['name'],
-					$_REQUEST['email']
+					($_REQUEST['name'] ?? null),
+					($_REQUEST['email'] ?? null)
 				]);
 				
 				// Log setup completion
 				$db->query("INSERT INTO audit (who, what) VALUES (?, ?)", [
-					$_REQUEST['username'],
+					($_REQUEST['username'] ?? null),
 					'SETUP: Initial setup completed'
 				]);
 				
@@ -215,7 +215,7 @@ Options -Indexes
 						}
 						
 						$db->query("INSERT INTO audit (who, what) VALUES (?, ?)", [
-							$_REQUEST['username'],
+							($_REQUEST['username'] ?? null),
 							'SETUP: Created .htaccess security file with protections for: *.inc, *.db, *.sqlite*, data/, .git/, backup files, and security headers. Working: ' . ($htaccess_working ? 'Yes' : 'Unknown - may need Apache AllowOverride configuration')
 						]);
 					} else {
@@ -226,7 +226,7 @@ Options -Indexes
 					$htaccess_created = false;
 					$htaccess_working = false;
 					$db->query("INSERT INTO audit (who, what) VALUES (?, ?)", [
-						$_REQUEST['username'],
+						($_REQUEST['username'] ?? null),
 						'SETUP: Failed to create .htaccess security file: ' . $e->getMessage()
 					]);
 				}
@@ -274,7 +274,7 @@ Options -Indexes
 				echo "</div>";
 				echo "<div class='col-md-6'>";
 				echo "<h6>Administrator Login:</h6>";
-				echo "<p><strong>Username:</strong> " . htmlspecialchars($_REQUEST['username']) . "<br>";
+				echo "<p><strong>Username:</strong> " . htmlspecialchars(($_REQUEST['username'] ?? '')) . "<br>";
 				echo "<strong>Password:</strong> [as entered]</p>";
 				echo "</div>";
 				echo "</div>";

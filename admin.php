@@ -42,14 +42,14 @@ session_start();
 
 // Handle Ajax requests BEFORE any HTML output
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-if ($is_ajax && isset($_REQUEST['func']) && $_REQUEST['func'] == 'aircraft' && isset($_REQUEST['func_do']) && $_REQUEST['func_do'] == 'edit_do') {
+if ($is_ajax && isset($_REQUEST['func']) && ($_REQUEST['func'] ?? null) == 'aircraft' && isset($_REQUEST['func_do']) && ($_REQUEST['func_do'] ?? null) == 'edit_do') {
     // Include necessary files for Ajax handling
     include_once 'func.inc';
     
     // Initialize authentication variables
     $is_authenticated = false;
     $loginlevel = "0";
-    $loginuser = isset($_SESSION["loginuser"]) ? $_SESSION["loginuser"] : "";
+    $loginuser = ($_SESSION["loginuser"] ?? "");
     $authenticated = !empty($_SESSION["authenticated"]);
 
     if (!empty($loginuser) && $authenticated) {
@@ -82,8 +82,8 @@ PageHeader("Admin Interface");
 // Initialize loginlevel to default value
 $loginlevel = "0";
 
-if (!isset($_REQUEST['func']) || $_REQUEST['func'] != "login") {
-	$loginuser = isset($_SESSION["loginuser"]) ? $_SESSION["loginuser"] : "";
+if (!isset($_REQUEST['func']) || ($_REQUEST['func'] ?? null) != "login") {
+	$loginuser = ($_SESSION["loginuser"] ?? "");
 	$authenticated = !empty($_SESSION["authenticated"]);
 
 	// Check if user has an authenticated session
@@ -179,7 +179,7 @@ if ($config['update_check'] < (time()-86400)) {
 	
 	$db->query("UPDATE configuration SET `value` = ? WHERE `item` = 'update_check'", [time()]);
 	$db->query("UPDATE configuration SET `value` = ? WHERE `item` = 'update_version'", [$ver_dist]);
-	$current_user = isset($_SESSION["loginuser"]) ? $_SESSION["loginuser"] : 'system';
+	$current_user = ($_SESSION["loginuser"] ?? 'system');
 	$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$current_user, 'UPDATE_CHECK: installed ' . $ver . ', available ' . $ver_dist]);
 }
 if ($ver != $config['update_version'] && $loginlevel=="1") {
@@ -245,7 +245,7 @@ if ($loginlevel=="1" && file_exists('config.inc') && !file_exists(dirname(__FILE
 }
 
 if (isset($_REQUEST['sysmsg'])) {
-    $sysmsg = $_REQUEST['sysmsg'];
+    $sysmsg = ($_REQUEST['sysmsg'] ?? null);
     if ($sysmsg=="logout") { echo "<div class=\"alert alert-success text-center\">You have been logged out.</div>\n\n";
     } elseif ($sysmsg=="login") { echo "<div class=\"alert alert-success text-center\">You have been logged in. Select a function from the navigation above.</div>\n\n";
     } elseif ($sysmsg=="unauthorized") { echo "<div class=\"alert alert-danger text-center\">Sorry, you are not allowed to access that module.</div>\n\n";
@@ -253,22 +253,22 @@ if (isset($_REQUEST['sysmsg'])) {
     } elseif ($sysmsg=="acdeleted") { echo "<div class=\"alert alert-success text-center\">The aircraft has been deleted.</div>\n\n"; }
 }
 
-switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
+switch (($_REQUEST["func"] ?? "")) {
     case "login":
-    	if (isset($_REQUEST['username']) && $_REQUEST['username']!="" && isset($_REQUEST['password'])) {
+    	if (isset($_REQUEST['username']) && ($_REQUEST['username'] ?? null)!="" && isset($_REQUEST['password'])) {
     		// login validation code here - stay logged in for a week
     		// setcookie("loginuser", $_REQUEST['username'], time()+604800);
     		// setcookie("loginpass", md5($_REQUEST['password']), time()+604800);
 				// Validate login credentials first
-				$login_query = $db->query("SELECT * FROM users WHERE username = ?", [$_REQUEST['username']]);
+				$login_query = $db->query("SELECT * FROM users WHERE username = ?", [($_REQUEST['username'] ?? null)]);
 				$user_data = $db->fetchAssoc($login_query);
 				
-				if ($user_data && password_verify($_REQUEST['password'], $user_data['password'])) {
+				if ($user_data && password_verify(($_REQUEST['password'] ?? ''), $user_data['password'])) {
 					// Valid login - set session and redirect.
 					// Regenerate the session id to prevent session fixation, and store
 					// only an authentication flag - never the plaintext password.
 					session_regenerate_id(true);
-					$_SESSION["loginuser"] = $_REQUEST['username'];
+					$_SESSION["loginuser"] = ($_REQUEST['username'] ?? null);
 					$_SESSION["authenticated"] = true;
 					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?sysmsg=login');
 				} else {
@@ -312,8 +312,8 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 	}
 
         echo "<h3 class=\"text-primary mb-3\">System Module</h3>";
-	if (isset($_REQUEST['message']) && $_REQUEST['message']=="updated") {echo "<p style=\"color: #00AA00; text-align: center;\">Settings Updated.</p>\n\n";}
-    	switch (isset($_REQUEST["func_do"]) ? $_REQUEST["func_do"] : "") {
+	if (isset($_REQUEST['message']) && ($_REQUEST['message'] ?? null)=="updated") {echo "<p style=\"color: #00AA00; text-align: center;\">Settings Updated.</p>\n\n";}
+    	switch (($_REQUEST["func_do"] ?? "")) {
     		case "update":
     			// SQL query to update system settings
 			foreach ($_POST as $k=>$v) {
@@ -368,25 +368,25 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 
     case "aircraft":
         echo "<h3 class=\"text-primary mb-3\">Aircraft Module</h3>";
-	switch (isset($_REQUEST["func_do"]) ? $_REQUEST["func_do"] : "") {
+	switch (($_REQUEST["func_do"] ?? "")) {
 		case "add":
-			switch (isset($_REQUEST["step"]) ? $_REQUEST["step"] : "") {
+			switch (($_REQUEST["step"] ?? "")) {
 				case "2":
 					// SQL query to add a new aircraft
 					$sql_query = "INSERT INTO `aircraft` (`active`, `tailnumber`, `makemodel`, `emptywt`, `emptycg`, `maxwt`, `fuelunit`, `weight_units`, `fuel_type`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-					$db->query($sql_query, ['0', $_REQUEST['tailnumber'], $_REQUEST['makemodel'], $_REQUEST['emptywt'], $_REQUEST['emptycg'], $_REQUEST['maxwt'], $_REQUEST['fuelunit'], $_REQUEST['weight_units'], $_REQUEST['fuel_type']]);
-					$aircraft_result = $db->query("SELECT * FROM `aircraft` WHERE `tailnumber` = ? ORDER BY `id` DESC LIMIT 1", [$_REQUEST['tailnumber']]);
+					$db->query($sql_query, ['0', ($_REQUEST['tailnumber'] ?? null), ($_REQUEST['makemodel'] ?? null), ($_REQUEST['emptywt'] ?? null), ($_REQUEST['emptycg'] ?? null), ($_REQUEST['maxwt'] ?? null), ($_REQUEST['fuelunit'] ?? null), ($_REQUEST['weight_units'] ?? null), ($_REQUEST['fuel_type'] ?? null)]);
+					$aircraft_result = $db->query("SELECT * FROM `aircraft` WHERE `tailnumber` = ? ORDER BY `id` DESC LIMIT 1", [($_REQUEST['tailnumber'] ?? null)]);
 					$aircraft = $db->fetchAssoc($aircraft_result);
 					// Enter in the audit log
 					$audit_data = [
-						'tailnumber' => $_REQUEST['tailnumber'],
-						'makemodel' => $_REQUEST['makemodel'],
-						'emptywt' => $_REQUEST['emptywt'],
-						'emptycg' => $_REQUEST['emptycg'],
-						'maxwt' => $_REQUEST['maxwt'],
-						'fuelunit' => $_REQUEST['fuelunit'],
-						'weight_units' => $_REQUEST['weight_units'],
-						'fuel_type' => $_REQUEST['fuel_type']
+						'tailnumber' => ($_REQUEST['tailnumber'] ?? null),
+						'makemodel' => ($_REQUEST['makemodel'] ?? null),
+						'emptywt' => ($_REQUEST['emptywt'] ?? null),
+						'emptycg' => ($_REQUEST['emptycg'] ?? null),
+						'maxwt' => ($_REQUEST['maxwt'] ?? null),
+						'fuelunit' => ($_REQUEST['fuelunit'] ?? null),
+						'weight_units' => ($_REQUEST['weight_units'] ?? null),
+						'fuel_type' => ($_REQUEST['fuel_type'] ?? null)
 					];
 					$audit_message = createAuditMessage("Created new aircraft", $audit_data);
 					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ": " . $audit_message]);
@@ -481,23 +481,23 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 			}
 			break;
 		case "delete":
-			if ($_REQUEST['tailnumber']!="") {
-				if ($_REQUEST['confirm']=="DELETE FOREVER") {
+			if (($_REQUEST['tailnumber'] ?? null)!="") {
+				if (($_REQUEST['confirm'] ?? null)=="DELETE FOREVER") {
 					// Get aircraft info before deletion for audit log
-					$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+					$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 					$aircraft = $db->fetchAssoc($aircraft_query);
 					
 					$sql_query1 = "DELETE FROM aircraft_cg WHERE `tailnumber` = ?";
 					$sql_query2 = "DELETE FROM aircraft_weights WHERE `tailnumber` = ?";
 					$sql_query3 = "DELETE FROM aircraft WHERE `id` = ?";
-					$db->query($sql_query1, [$_REQUEST['tailnumber']]);
-					$db->query($sql_query2, [$_REQUEST['tailnumber']]);
-					$db->query($sql_query3, [$_REQUEST['tailnumber']]);
+					$db->query($sql_query1, [($_REQUEST['tailnumber'] ?? null)]);
+					$db->query($sql_query2, [($_REQUEST['tailnumber'] ?? null)]);
+					$db->query($sql_query3, [($_REQUEST['tailnumber'] ?? null)]);
 					// Enter in the audit log
 					$audit_data = [
 						'tailnumber' => $aircraft['tailnumber'],
 						'makemodel' => $aircraft['makemodel'],
-						'aircraft_id' => $_REQUEST['tailnumber']
+						'aircraft_id' => ($_REQUEST['tailnumber'] ?? null)
 					];
 					$audit_message = createAuditMessage("Deleted aircraft and all associated data", $audit_data);
 					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'ACDELETE: ' . $audit_message]);
@@ -546,26 +546,26 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 			}
 			break;
 		case "duplicate":
-			if ($_REQUEST['tailnumber']!="") {
+			if (($_REQUEST['tailnumber'] ?? null)!="") {
 				// create the new aircraft
-				$aircraft_result = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+				$aircraft_result = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 				$aircraft = $db->fetchAssoc($aircraft_result);
 				$db->query("INSERT INTO aircraft (`active`, `tailnumber`, `makemodel`, `emptywt`, `emptycg`, `maxwt`, `fuelunit`, `weight_units`, `arm_units`, `fuel_type`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-					['0', $_REQUEST['newtailnumber'], $_REQUEST['newmakemodel'], $aircraft['emptywt'], $aircraft['emptycg'], $aircraft['maxwt'], $aircraft['fuelunit'], $aircraft['weight_units'], $aircraft['arm_units'], $aircraft['fuel_type']]);
+					['0', ($_REQUEST['newtailnumber'] ?? null), ($_REQUEST['newmakemodel'] ?? null), $aircraft['emptywt'], $aircraft['emptycg'], $aircraft['maxwt'], $aircraft['fuelunit'], $aircraft['weight_units'], $aircraft['arm_units'], $aircraft['fuel_type']]);
 
 				// get id of new aircraft
-				$aircraft_result = $db->query("SELECT * FROM aircraft WHERE tailnumber = ? ORDER BY id DESC LIMIT 1", [$_REQUEST['newtailnumber']]);
+				$aircraft_result = $db->query("SELECT * FROM aircraft WHERE tailnumber = ? ORDER BY id DESC LIMIT 1", [($_REQUEST['newtailnumber'] ?? null)]);
 				$aircraft_new = $db->fetchAssoc($aircraft_result);
 
 				// duplicate the weights
-				$weights_result = $db->query("SELECT * FROM aircraft_weights WHERE tailnumber = ?", [$_REQUEST['tailnumber']]);
+				$weights_result = $db->query("SELECT * FROM aircraft_weights WHERE tailnumber = ?", [($_REQUEST['tailnumber'] ?? null)]);
 				while($row = $db->fetchAssoc($weights_result)) {
 					$db->query("INSERT INTO aircraft_weights (`tailnumber`, `order`, `item`, `weight`, `arm`, `fuelwt`, `type`, `weight_limit`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 						[$aircraft_new['id'], $row['order'], $row['item'], $row['weight'], $row['arm'], $row['fuelwt'] ?? 0, $row['type'] ?? 'Variable Weight no limit', $row['weight_limit'] ?? null]);
 				}
 
 				// duplicate the cg envelopes
-				$cg_result = $db->query("SELECT * FROM aircraft_cg WHERE tailnumber = ?", [$_REQUEST['tailnumber']]);
+				$cg_result = $db->query("SELECT * FROM aircraft_cg WHERE tailnumber = ?", [($_REQUEST['tailnumber'] ?? null)]);
 				while($row = $db->fetchAssoc($cg_result)) {
 					$envelope_name = isset($row['envelope_name']) ? $row['envelope_name'] : 'Normal';
 					$color = isset($row['color']) ? $row['color'] : 'blue';
@@ -575,11 +575,11 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 
 				// Enter in the audit log
 				$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 
-					'DUPLICATE: (' . $aircraft['id'] . ', ' . $aircraft['tailnumber'] . ', ' . $aircraft['makemodel'] . ') AS (' . $aircraft_new['id'] . ', ' . $_REQUEST['newtailnumber'] . ', ' . $_REQUEST['newmakemodel'] . ')']);
+					'DUPLICATE: (' . $aircraft['id'] . ', ' . $aircraft['tailnumber'] . ', ' . $aircraft['makemodel'] . ') AS (' . $aircraft_new['id'] . ', ' . ($_REQUEST['newtailnumber'] ?? null) . ', ' . ($_REQUEST['newmakemodel'] ?? null) . ')']);
 
 				echo "<div class=\"alert alert-success\">\n";
 				echo "<h5 class=\"alert-heading\">Aircraft Duplicated Successfully!</h5>\n";
-				echo "<p class=\"mb-2\">The aircraft has been cloned with the new tail number: <strong>" . htmlspecialchars($_REQUEST['newtailnumber']) . "</strong></p>\n";
+				echo "<p class=\"mb-2\">The aircraft has been cloned with the new tail number: <strong>" . htmlspecialchars(($_REQUEST['newtailnumber'] ?? '')) . "</strong></p>\n";
 				echo "<p class=\"mb-0\">Next step: <a href=\"admin.php?func=aircraft&amp;func_do=edit&amp;tailnumber=" . $aircraft_new['id'] . "\" class=\"alert-link\">Complete the aircraft configuration</a> by editing the CG envelope and loading zones.</p>\n";
 				echo "</div>\n";
 			} else {
@@ -621,7 +621,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 			}
 			break;
 		case "edit":
-			if (isset($_REQUEST['tailnumber']) && $_REQUEST['tailnumber']!="") {
+			if (isset($_REQUEST['tailnumber']) && ($_REQUEST['tailnumber'] ?? null)!="") {
 				// Check if database needs upgrade before any output
 				$has_envelope_columns = $db->hasColumn('aircraft_cg', 'envelope_name');
 				
@@ -631,7 +631,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					exit;
 				}
 				
-				$aircraft_result = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+				$aircraft_result = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 				$aircraft = $db->fetchAssoc($aircraft_result);
 
 				echo "<div class=\"mb-4\">\n";
@@ -796,7 +796,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 				
 				// If we have a current envelope from URL that's not in the list (newly created), add it
 				if (isset($_GET['envelope']) && !empty($_GET['envelope'])) {
-					$current_from_url = $_GET['envelope'];
+					$current_from_url = ($_GET['envelope'] ?? null);
 					$found_in_list = false;
 					foreach ($envelopes as $env) {
 						if ($env['envelope_name'] === $current_from_url) {
@@ -806,7 +806,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					}
 					if (!$found_in_list) {
 						// Add the envelope from URL with color from URL parameter or default
-						$color_from_url = isset($_GET['envelope_color']) ? $_GET['envelope_color'] : 'blue';
+						$color_from_url = ($_GET['envelope_color'] ?? 'blue');
 						$envelopes[] = ['envelope_name' => $current_from_url, 'color' => $color_from_url];
 					}
 				}
@@ -822,12 +822,12 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					echo "</div>\n";
 				} else {
 					// Envelope selector and current envelope display
-					$current_envelope = isset($_GET['envelope']) ? $_GET['envelope'] : $envelopes[0]['envelope_name'];
+					$current_envelope = isset($_GET['envelope']) ? ($_GET['envelope'] ?? null) : $envelopes[0]['envelope_name'];
 					$current_envelope_color = 'primary';
 					
 					// Check for envelope color in URL parameter first (for newly created envelopes)
 					if (isset($_GET['envelope_color']) && !empty($_GET['envelope_color'])) {
-						$current_envelope_color = $_GET['envelope_color'];
+						$current_envelope_color = ($_GET['envelope_color'] ?? null);
 					} else {
 						// Find current envelope color from existing envelopes
 						foreach ($envelopes as $env) {
@@ -876,7 +876,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 					echo "<input type=\"hidden\" name=\"envelope_name\" value=\"" . htmlspecialchars($current_envelope) . "\">\n";
 					// Pass envelope color if provided in URL (for new envelopes)
 					if (isset($_GET['envelope_color']) && !empty($_GET['envelope_color'])) {
-						echo "<input type=\"hidden\" name=\"envelope_color\" value=\"" . htmlspecialchars($_GET['envelope_color']) . "\">\n";
+						echo "<input type=\"hidden\" name=\"envelope_color\" value=\"" . htmlspecialchars(($_GET['envelope_color'] ?? '')) . "\">\n";
 					}
 					
 					echo "<div class=\"table-responsive\">\n";
@@ -2010,59 +2010,59 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 			}
 			break;
 		case "edit_do":
-			switch ($_REQUEST["what"]) {
+			switch (($_REQUEST["what"] ?? null)) {
 				case "basics":
 					// SQL query to edit basic aircraft information
-					$active = isset($_REQUEST['active']) && $_REQUEST['active'] != '' ? $_REQUEST['active'] : '0';
-					$mlw_value = isset($_REQUEST['max_landing_weight']) && $_REQUEST['max_landing_weight'] !== '' ? $_REQUEST['max_landing_weight'] : null;
+					$active = isset($_REQUEST['active']) && ($_REQUEST['active'] ?? null) != '' ? ($_REQUEST['active'] ?? null) : '0';
+					$mlw_value = isset($_REQUEST['max_landing_weight']) && ($_REQUEST['max_landing_weight'] ?? null) !== '' ? ($_REQUEST['max_landing_weight'] ?? null) : null;
 					$sql_query = "UPDATE aircraft SET active = ?, tailnumber = ?, makemodel = ?, emptywt = ?, emptycg = ?, maxwt = ?, fuelunit = ?, weight_units = ?, arm_units = ?, fuel_type = ?, max_landing_weight = ? WHERE id = ?";
-					$db->query($sql_query, [$active, $_REQUEST['tailnumber'], $_REQUEST['makemodel'], $_REQUEST['emptywt'], $_REQUEST['emptycg'], $_REQUEST['maxwt'], $_REQUEST['fuelunit'], $_REQUEST['weight_units'], $_REQUEST['arm_units'], $_REQUEST['fuel_type'], $mlw_value, $_REQUEST['id']]);
+					$db->query($sql_query, [$active, ($_REQUEST['tailnumber'] ?? null), ($_REQUEST['makemodel'] ?? null), ($_REQUEST['emptywt'] ?? null), ($_REQUEST['emptycg'] ?? null), ($_REQUEST['maxwt'] ?? null), ($_REQUEST['fuelunit'] ?? null), ($_REQUEST['weight_units'] ?? null), ($_REQUEST['arm_units'] ?? null), ($_REQUEST['fuel_type'] ?? null), $mlw_value, ($_REQUEST['id'] ?? null)]);
 					// Enter in the audit log
 					$audit_data = [
 						'active' => $active,
-						'tailnumber' => $_REQUEST['tailnumber'],
-						'makemodel' => $_REQUEST['makemodel'],
-						'emptywt' => $_REQUEST['emptywt'],
-						'emptycg' => $_REQUEST['emptycg'],
-						'maxwt' => $_REQUEST['maxwt'],
-						'fuelunit' => $_REQUEST['fuelunit'],
-						'weight_units' => $_REQUEST['weight_units'],
-						'fuel_type' => $_REQUEST['fuel_type'],
+						'tailnumber' => ($_REQUEST['tailnumber'] ?? null),
+						'makemodel' => ($_REQUEST['makemodel'] ?? null),
+						'emptywt' => ($_REQUEST['emptywt'] ?? null),
+						'emptycg' => ($_REQUEST['emptycg'] ?? null),
+						'maxwt' => ($_REQUEST['maxwt'] ?? null),
+						'fuelunit' => ($_REQUEST['fuelunit'] ?? null),
+						'weight_units' => ($_REQUEST['weight_units'] ?? null),
+						'fuel_type' => ($_REQUEST['fuel_type'] ?? null),
 						'max_landing_weight' => $mlw_value
 					];
 					$audit_message = createAuditMessage("Updated aircraft basics", $audit_data);
-					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $_REQUEST['tailnumber'] . ': ' . $audit_message]);
-					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['id'] . '&message=updated');
+					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, ($_REQUEST['tailnumber'] ?? null) . ': ' . $audit_message]);
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['id'] ?? null) . '&message=updated');
 					break;
 				case "cg":
-					$envelope_name = isset($_REQUEST['envelope_name']) ? $_REQUEST['envelope_name'] : 'Normal';
-					if (isset($_REQUEST['new_arm']) && $_REQUEST['new_arm'] != "" && isset($_REQUEST['new_weight']) && $_REQUEST['new_weight'] != "") {
+					$envelope_name = ($_REQUEST['envelope_name'] ?? 'Normal');
+					if (isset($_REQUEST['new_arm']) && ($_REQUEST['new_arm'] ?? null) != "" && isset($_REQUEST['new_weight']) && ($_REQUEST['new_weight'] ?? null) != "") {
 						// Check if this envelope already exists to get its color, or use provided color, or use default
-						$color_query = $db->query("SELECT DISTINCT color FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ? LIMIT 1", [$_REQUEST['tailnumber'], $envelope_name]);
+						$color_query = $db->query("SELECT DISTINCT color FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ? LIMIT 1", [($_REQUEST['tailnumber'] ?? null), $envelope_name]);
 						$color_result = $db->fetchAssoc($color_query);
 						
 						// Use existing color if found, otherwise use provided envelope_color, otherwise default to blue
 						if ($color_result) {
 							$envelope_color = $color_result['color'];
 						} elseif (isset($_REQUEST['envelope_color']) && !empty($_REQUEST['envelope_color'])) {
-							$envelope_color = $_REQUEST['envelope_color'];
+							$envelope_color = ($_REQUEST['envelope_color'] ?? null);
 						} else {
 							$envelope_color = 'blue';
 						}
 						
 						// SQL query to add a new CG line
 						$sql_query = "INSERT INTO aircraft_cg (`id`, `tailnumber`, `arm`, `weight`, `envelope_name`, `color`) VALUES (NULL, ?, ?, ?, ?, ?)";
-						$db->query($sql_query, [$_REQUEST['tailnumber'], $_REQUEST['new_arm'], $_REQUEST['new_weight'], $envelope_name, $envelope_color]);
+						$db->query($sql_query, [($_REQUEST['tailnumber'] ?? null), ($_REQUEST['new_arm'] ?? null), ($_REQUEST['new_weight'] ?? null), $envelope_name, $envelope_color]);
 						
 						// Get the ID of the newly inserted row
 						$new_cg_id = $db->lastInsertId();
 						
 						// Enter in the audit log
-						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 						$aircraft = $db->fetchAssoc($aircraft_query);
-						$audit_data = ['arm' => $_REQUEST['new_arm'], 'weight' => $_REQUEST['new_weight'], 'envelope' => $envelope_name];
+						$audit_data = ['arm' => ($_REQUEST['new_arm'] ?? null), 'weight' => ($_REQUEST['new_weight'] ?? null), 'envelope' => $envelope_name];
 						$audit_message = createAuditMessage("Added CG envelope point", $audit_data);
-						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
+						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, ($aircraft['tailnumber'] ?? '') . ': ' . $audit_message]);
 						
 						// Check if this is an Ajax request (from our JavaScript)
 						$is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
@@ -2072,27 +2072,27 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 							echo json_encode([
 								'success' => true,
 								'id' => $new_cg_id,
-								'arm' => $_REQUEST['new_arm'],
-								'weight' => $_REQUEST['new_weight'],
+								'arm' => ($_REQUEST['new_arm'] ?? null),
+								'weight' => ($_REQUEST['new_weight'] ?? null),
 								'envelope_name' => $envelope_name
 							]);
 							exit;
 						} else {
 							// Traditional redirect for non-Ajax requests
 							$is_https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-							$redirect_url = '' . ($is_https ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($envelope_name) . '&message=updated';
+							$redirect_url = '' . ($is_https ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['tailnumber'] ?? null) . '&envelope=' . urlencode($envelope_name) . '&message=updated';
 							header('Location: ' . $redirect_url);
 						}
 					} else {
 						// SQL query to edit CG information
 						$sql_query = "UPDATE aircraft_cg SET arm = ?, weight = ? WHERE id = ?";
-						$db->query($sql_query, [$_REQUEST['cgarm'], $_REQUEST['cgweight'], $_REQUEST['id']]);
+						$db->query($sql_query, [($_REQUEST['cgarm'] ?? null), ($_REQUEST['cgweight'] ?? null), ($_REQUEST['id'] ?? null)]);
 						// Enter in the audit log
-						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 						$aircraft = $db->fetchAssoc($aircraft_query);
-						$audit_data = ['arm' => $_REQUEST['cgarm'], 'weight' => $_REQUEST['cgweight'], 'cg_id' => $_REQUEST['id'], 'envelope' => $envelope_name];
+						$audit_data = ['arm' => ($_REQUEST['cgarm'] ?? null), 'weight' => ($_REQUEST['cgweight'] ?? null), 'cg_id' => ($_REQUEST['id'] ?? null), 'envelope' => $envelope_name];
 						$audit_message = createAuditMessage("Updated CG envelope point", $audit_data);
-						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
+						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, ($aircraft['tailnumber'] ?? '') . ': ' . $audit_message]);
 
 						// Check if this is an Ajax request
 						if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
@@ -2103,57 +2103,57 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 						} else {
 							// Traditional redirect for non-Ajax requests
 							$is_https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-							$redirect_url = '' . ($is_https ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($envelope_name) . '&message=updated';
+							$redirect_url = '' . ($is_https ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['tailnumber'] ?? null) . '&envelope=' . urlencode($envelope_name) . '&message=updated';
 							header('Location: ' . $redirect_url);
 						}
 					}
 					break;
 				case "envelope_delete":
 					// Delete entire envelope
-					$envelope_name = $_REQUEST['envelope_name'];
+					$envelope_name = ($_REQUEST['envelope_name'] ?? null);
 					
 					// Get envelope info before deletion for audit log
-					$envelope_query = $db->query("SELECT COUNT(*) as point_count FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ?", [$_REQUEST['tailnumber'], $envelope_name]);
+					$envelope_query = $db->query("SELECT COUNT(*) as point_count FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ?", [($_REQUEST['tailnumber'] ?? null), $envelope_name]);
 					$envelope_info = $db->fetchAssoc($envelope_query);
 					
 					// Delete all points for this envelope
 					$sql_query = "DELETE FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ?";
-					$db->query($sql_query, [$_REQUEST['tailnumber'], $envelope_name]);
+					$db->query($sql_query, [($_REQUEST['tailnumber'] ?? null), $envelope_name]);
 					
 					// Enter in the audit log
-					$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+					$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 					$aircraft = $db->fetchAssoc($aircraft_query);
-					$audit_data = ['envelope_name' => $envelope_name, 'points_deleted' => $envelope_info['point_count']];
+					$audit_data = ['envelope_name' => $envelope_name, 'points_deleted' => ($envelope_info['point_count'] ?? '')];
 					$audit_message = createAuditMessage("Deleted CG envelope", $audit_data);
-					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
+					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, ($aircraft['tailnumber'] ?? '') . ': ' . $audit_message]);
 					
-					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['tailnumber'] ?? null) . '&message=updated');
 					break;
 				case "envelope_edit":
 					// Edit envelope name and/or color
-					$old_envelope_name = $_REQUEST['old_envelope_name'];
-					$new_envelope_name = trim($_REQUEST['envelope_name']);
-					$new_envelope_color = $_REQUEST['envelope_color'];
+					$old_envelope_name = ($_REQUEST['old_envelope_name'] ?? null);
+					$new_envelope_name = trim(($_REQUEST['envelope_name'] ?? ''));
+					$new_envelope_color = ($_REQUEST['envelope_color'] ?? null);
 					
 					if (!empty($new_envelope_name)) {
 						// Check if the new name conflicts with another envelope (unless it's the same name)
 						if ($old_envelope_name !== $new_envelope_name) {
-							$check_query = $db->query("SELECT COUNT(*) as count FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ?", [$_REQUEST['tailnumber'], $new_envelope_name]);
+							$check_query = $db->query("SELECT COUNT(*) as count FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ?", [($_REQUEST['tailnumber'] ?? null), $new_envelope_name]);
 							$check_result = $db->fetchAssoc($check_query);
 							
 							if ($check_result['count'] > 0) {
 								// Name conflict - redirect with error (could be enhanced with error message)
-								header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($old_envelope_name) . '&error=name_conflict');
+								header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['tailnumber'] ?? null) . '&envelope=' . urlencode($old_envelope_name) . '&error=name_conflict');
 								break;
 							}
 						}
 						
 						// Update all CG points for this envelope with new name and color
 						$sql_query = "UPDATE aircraft_cg SET envelope_name = ?, color = ? WHERE tailnumber = ? AND envelope_name = ?";
-						$db->query($sql_query, [$new_envelope_name, $new_envelope_color, $_REQUEST['tailnumber'], $old_envelope_name]);
+						$db->query($sql_query, [$new_envelope_name, $new_envelope_color, ($_REQUEST['tailnumber'] ?? null), $old_envelope_name]);
 						
 						// Enter in the audit log
-						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 						$aircraft = $db->fetchAssoc($aircraft_query);
 						$audit_data = [
 							'old_name' => $old_envelope_name,
@@ -2161,38 +2161,38 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 							'new_color' => $new_envelope_color
 						];
 						$audit_message = createAuditMessage("Updated CG envelope", $audit_data);
-						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
+						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, ($aircraft['tailnumber'] ?? '') . ': ' . $audit_message]);
 						
-						$redirect_url = '' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&envelope=' . urlencode($new_envelope_name) . '&message=updated';
+						$redirect_url = '' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['tailnumber'] ?? null) . '&envelope=' . urlencode($new_envelope_name) . '&message=updated';
 						header('Location: ' . $redirect_url);
 					}
 					break;
 				case "cg_del":
 					// Get CG info before deletion for audit log
-					$cg_query = $db->query("SELECT * FROM aircraft_cg WHERE id = ?", [$_REQUEST['id']]);
+					$cg_query = $db->query("SELECT * FROM aircraft_cg WHERE id = ?", [($_REQUEST['id'] ?? null)]);
 					$cg_info = $db->fetchAssoc($cg_query);
 					
 					// SQL query to delete CG information
 					$sql_query = "DELETE FROM aircraft_cg WHERE id = ?";
-					$db->query($sql_query, [$_REQUEST['id']]);
+					$db->query($sql_query, [($_REQUEST['id'] ?? null)]);
 					// Enter in the audit log
-					$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+					$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 					$aircraft = $db->fetchAssoc($aircraft_query);
 					$audit_data = [
-						'cg_id' => $_REQUEST['id'],
-						'arm' => $cg_info['arm'],
-						'weight' => $cg_info['weight']
+						'cg_id' => ($_REQUEST['id'] ?? null),
+						'arm' => ($cg_info['arm'] ?? ''),
+						'weight' => ($cg_info['weight'] ?? '')
 					];
 					$audit_message = createAuditMessage("Deleted CG envelope point", $audit_data);
-					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
-					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, ($aircraft['tailnumber'] ?? '') . ': ' . $audit_message]);
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['tailnumber'] ?? null) . '&message=updated');
 					break;
 				case "loading":
-					if (isset($_REQUEST['new_item']) && $_REQUEST['new_item'] && isset($_REQUEST['new_arm']) && $_REQUEST['new_arm'] != "") {
+					if (isset($_REQUEST['new_item']) && ($_REQUEST['new_item'] ?? null) && isset($_REQUEST['new_arm']) && ($_REQUEST['new_arm'] ?? null) != "") {
 						// Set order to highest existing order + 1 if not specified
-						$order = $_REQUEST['new_order'];
+						$order = ($_REQUEST['new_order'] ?? null);
 						if (empty($order)) {
-							$max_order_query = $db->query("SELECT MAX(`order`) as max_order FROM aircraft_weights WHERE tailnumber = ?", [$_REQUEST['tailnumber']]);
+							$max_order_query = $db->query("SELECT MAX(`order`) as max_order FROM aircraft_weights WHERE tailnumber = ?", [($_REQUEST['tailnumber'] ?? null)]);
 							$max_order_result = $db->fetchAssoc($max_order_query);
 							$order = ($max_order_result['max_order'] ?? 0) + 1;
 						}
@@ -2200,7 +2200,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 						// SQL query to add a new loading line with new type system
 						$type = $_REQUEST['new_type'] ?? 'Variable Weight no limit';
 						if ($type === 'Variable Weight with limit' || $type === 'Fuel') {
-							$weight_limit = !empty($_REQUEST['new_weight_limit']) ? $_REQUEST['new_weight_limit'] : null;
+							$weight_limit = !empty($_REQUEST['new_weight_limit']) ? ($_REQUEST['new_weight_limit'] ?? null) : null;
 						} elseif ($type === 'Fixed Weight Removable') {
 							$weight_limit = !empty($_REQUEST['new_default_installed']) ? 1 : 0;
 						} else {
@@ -2208,12 +2208,12 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 						}
 						
 						// Validate weight against limit (only for Variable Weight with limit and Fuel types)
-						if (($type === 'Variable Weight with limit' || $type === 'Fuel') && $weight_limit !== null && $_REQUEST['new_weight'] > $weight_limit) {
-							echo "<div class='alert alert-danger'>Error: Weight (" . $_REQUEST['new_weight'] . ") cannot exceed weight limit (" . $weight_limit . ").</div>";
+						if (($type === 'Variable Weight with limit' || $type === 'Fuel') && $weight_limit !== null && ($_REQUEST['new_weight'] ?? null) > $weight_limit) {
+							echo "<div class='alert alert-danger'>Error: Weight (" . ($_REQUEST['new_weight'] ?? null) . ") cannot exceed weight limit (" . $weight_limit . ").</div>";
 							break;
 						}
 						
-						$params = [null, $_REQUEST['tailnumber'], $order, $_REQUEST['new_item'], $_REQUEST['new_weight'], $_REQUEST['new_arm'], 0, $type, $weight_limit];
+						$params = [null, ($_REQUEST['tailnumber'] ?? null), $order, ($_REQUEST['new_item'] ?? null), ($_REQUEST['new_weight'] ?? null), ($_REQUEST['new_arm'] ?? null), 0, $type, $weight_limit];
 						$sql_query = "INSERT INTO aircraft_weights (`id`, `tailnumber`, `order`, `item`, `weight`, `arm`, `fuelwt`, `type`, `weight_limit`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 						$db->query($sql_query, $params);
 						
@@ -2221,20 +2221,20 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 						$new_weight_id = $db->lastInsertId();
 						
 						// Enter in the audit log
-						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 						$aircraft = $db->fetchAssoc($aircraft_query);
 						$audit_data = [
 							'order' => $order,
-							'item' => $_REQUEST['new_item'],
-							'weight' => $_REQUEST['new_weight'],
-							'arm' => $_REQUEST['new_arm'],
+							'item' => ($_REQUEST['new_item'] ?? null),
+							'weight' => ($_REQUEST['new_weight'] ?? null),
+							'arm' => ($_REQUEST['new_arm'] ?? null),
 							'type' => $type
 						];
 						if ($weight_limit !== null) {
 							$audit_data['weight_limit'] = $weight_limit;
 						}
 						$audit_message = createAuditMessage("Added aircraft loading item", $audit_data);
-						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
+						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, ($aircraft['tailnumber'] ?? '') . ': ' . $audit_message]);
 						
 						// Check if this is an Ajax request (from our JavaScript)
 						$is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
@@ -2245,22 +2245,22 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 								'success' => true,
 								'id' => $new_weight_id,
 								'order' => $order,
-								'item' => $_REQUEST['new_item'],
-								'weight' => $_REQUEST['new_weight'],
-								'arm' => $_REQUEST['new_arm'],
+								'item' => ($_REQUEST['new_item'] ?? null),
+								'weight' => ($_REQUEST['new_weight'] ?? null),
+								'arm' => ($_REQUEST['new_arm'] ?? null),
 								'type' => $type,
 								'weight_limit' => $weight_limit
 							]);
 							exit;
 						} else {
 							// Traditional redirect for non-Ajax requests
-							header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+							header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['tailnumber'] ?? null) . '&message=updated');
 						}
 					} else {
 						// SQL query to edit loading zones with new type system
 						$type = $_REQUEST['type'] ?? 'Variable Weight no limit';
 						if ($type === 'Variable Weight with limit' || $type === 'Fuel') {
-							$weight_limit = !empty($_REQUEST['weight_limit']) ? $_REQUEST['weight_limit'] : null;
+							$weight_limit = !empty($_REQUEST['weight_limit']) ? ($_REQUEST['weight_limit'] ?? null) : null;
 						} elseif ($type === 'Fixed Weight Removable') {
 							$weight_limit = !empty($_REQUEST['weight_limit']) ? 1 : 0;
 						} else {
@@ -2268,55 +2268,55 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 						}
 						
 						// Validate weight against limit (only for Variable Weight with limit and Fuel types)
-						if (($type === 'Variable Weight with limit' || $type === 'Fuel') && $weight_limit !== null && $_REQUEST['weight'] > $weight_limit) {
-							echo "<div class='alert alert-danger'>Error: Weight (" . $_REQUEST['weight'] . ") cannot exceed weight limit (" . $weight_limit . ").</div>";
+						if (($type === 'Variable Weight with limit' || $type === 'Fuel') && $weight_limit !== null && ($_REQUEST['weight'] ?? null) > $weight_limit) {
+							echo "<div class='alert alert-danger'>Error: Weight (" . ($_REQUEST['weight'] ?? null) . ") cannot exceed weight limit (" . $weight_limit . ").</div>";
 							break;
 						}
 						
-						$params = [$_REQUEST['order'], $_REQUEST['item'], $_REQUEST['weight'], $_REQUEST['arm'], 0, $type, $weight_limit, $_REQUEST['id']];
+						$params = [($_REQUEST['order'] ?? null), ($_REQUEST['item'] ?? null), ($_REQUEST['weight'] ?? null), ($_REQUEST['arm'] ?? null), 0, $type, $weight_limit, ($_REQUEST['id'] ?? null)];
 						$sql_query = "UPDATE aircraft_weights SET `order` = ?, `item` = ?, `weight` = ?, `arm` = ?, `fuelwt` = ?, `type` = ?, `weight_limit` = ? WHERE id = ?";
 
 						$db->query($sql_query, $params);
 						// Enter in the audit log
-						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+						$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 						$aircraft = $db->fetchAssoc($aircraft_query);
 						$audit_data = [
-							'weight_id' => $_REQUEST['id'],
-							'order' => $_REQUEST['order'],
-							'item' => $_REQUEST['item'],
-							'weight' => $_REQUEST['weight'],
-							'arm' => $_REQUEST['arm'],
+							'weight_id' => ($_REQUEST['id'] ?? null),
+							'order' => ($_REQUEST['order'] ?? null),
+							'item' => ($_REQUEST['item'] ?? null),
+							'weight' => ($_REQUEST['weight'] ?? null),
+							'arm' => ($_REQUEST['arm'] ?? null),
 							'type' => $type
 						];
 						if ($weight_limit !== null) {
 							$audit_data['weight_limit'] = $weight_limit;
 						}
 						$audit_message = createAuditMessage("Updated aircraft loading item", $audit_data);
-						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
-						header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+						$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, ($aircraft['tailnumber'] ?? '') . ': ' . $audit_message]);
+						header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['tailnumber'] ?? null) . '&message=updated');
 					}
 					break;
 				case "loading_del":
 					// Get loading info before deletion for audit log
-					$loading_query = $db->query("SELECT * FROM aircraft_weights WHERE id = ?", [$_REQUEST['id']]);
+					$loading_query = $db->query("SELECT * FROM aircraft_weights WHERE id = ?", [($_REQUEST['id'] ?? null)]);
 					$loading_info = $db->fetchAssoc($loading_query);
 					
 					// SQL query to delete loading information
 					$sql_query = "DELETE FROM aircraft_weights WHERE id = ?";
-					$db->query($sql_query, [$_REQUEST['id']]);
+					$db->query($sql_query, [($_REQUEST['id'] ?? null)]);
 					// Enter in the audit log
-					$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+					$aircraft_query = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 					$aircraft = $db->fetchAssoc($aircraft_query);
 					$audit_data = [
-						'weight_id' => $_REQUEST['id'],
-						'item' => $loading_info['item'],
-						'weight' => $loading_info['weight'],
-						'arm' => $loading_info['arm'],
-						'order' => $loading_info['order']
+						'weight_id' => ($_REQUEST['id'] ?? null),
+						'item' => ($loading_info['item'] ?? ''),
+						'weight' => ($loading_info['weight'] ?? ''),
+						'arm' => ($loading_info['arm'] ?? ''),
+						'order' => ($loading_info['order'] ?? '')
 					];
 					$audit_message = createAuditMessage("Deleted aircraft loading item", $audit_data);
-					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, $aircraft['tailnumber'] . ': ' . $audit_message]);
-					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . $_REQUEST['tailnumber'] . '&message=updated');
+					$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, ($aircraft['tailnumber'] ?? '') . ': ' . $audit_message]);
+					header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=aircraft&func_do=edit&tailnumber=' . ($_REQUEST['tailnumber'] ?? null) . '&message=updated');
 			}
 
 			break;
@@ -2335,22 +2335,22 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 		exit;
 	}
         echo "<h3 class=\"text-primary mb-3\">Users Module</h3>";
-        if (isset($_REQUEST['message']) && $_REQUEST['message']=="added") { echo "<p style=\"color: #00AA00; text-align: center;\">User account added.</p>\n\n";
-        } elseif (isset($_REQUEST['message']) && $_REQUEST['message']=="edited") { echo "<p style=\"color: #00AA00; text-align: center;\">User account edited.</p>\n\n";
-        } elseif (isset($_REQUEST['message']) && $_REQUEST['message']=="deleted") { echo "<p style=\"color: #00AA00; text-align: center;\">User account deleted.</p>\n\n"; }
-	switch (isset($_REQUEST["func_do"]) ? $_REQUEST["func_do"] : "") {
+        if (isset($_REQUEST['message']) && ($_REQUEST['message'] ?? null)=="added") { echo "<p style=\"color: #00AA00; text-align: center;\">User account added.</p>\n\n";
+        } elseif (isset($_REQUEST['message']) && ($_REQUEST['message'] ?? null)=="edited") { echo "<p style=\"color: #00AA00; text-align: center;\">User account edited.</p>\n\n";
+        } elseif (isset($_REQUEST['message']) && ($_REQUEST['message'] ?? null)=="deleted") { echo "<p style=\"color: #00AA00; text-align: center;\">User account deleted.</p>\n\n"; }
+	switch (($_REQUEST["func_do"] ?? "")) {
 		case "add":
-			if (isset($_REQUEST['what']) && $_REQUEST['what']=="Add") {
-				if (isset($_REQUEST['superuser']) && $_REQUEST['superuser']=="1") { $add_superuser = "1"; }
+			if (isset($_REQUEST['what']) && ($_REQUEST['what'] ?? null)=="Add" && ($_REQUEST['username'] ?? '') !== '') {
+				if (isset($_REQUEST['superuser']) && ($_REQUEST['superuser'] ?? null)=="1") { $add_superuser = "1"; }
 				else { $add_superuser = "0"; }
 				// SQL query to add a new user
 				$sql_query = "INSERT INTO users (`username`, `password`, `name`, `email`, `superuser`) VALUES (?, ?, ?, ?, ?)";
-				$db->query($sql_query, [$_REQUEST['username'], password_hash($_REQUEST['password'], PASSWORD_DEFAULT), $_REQUEST['name'], $_REQUEST['email'], $add_superuser]);
+				$db->query($sql_query, [($_REQUEST['username'] ?? null), password_hash(($_REQUEST['password'] ?? ''), PASSWORD_DEFAULT), ($_REQUEST['name'] ?? null), ($_REQUEST['email'] ?? null), $add_superuser]);
 				// Enter in the audit log
 				$audit_data = [
-					'username' => $_REQUEST['username'],
-					'name' => $_REQUEST['name'],
-					'email' => $_REQUEST['email'],
+					'username' => ($_REQUEST['username'] ?? null),
+					'name' => ($_REQUEST['name'] ?? null),
+					'email' => ($_REQUEST['email'] ?? null),
 					'superuser' => $add_superuser
 				];
 				$audit_message = createAuditMessage("Created new user", $audit_data);
@@ -2404,56 +2404,60 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
 			}
 			break;
 		case "edit":
-			if (isset($_REQUEST['what']) && $_REQUEST['what']=="Edit") {
-				if ($_REQUEST['superuser']=="1") { $update_superuser = "1";	}
+			if (isset($_REQUEST['what']) && ($_REQUEST['what'] ?? null)=="Edit") {
+				if (($_REQUEST['superuser'] ?? null)=="1") { $update_superuser = "1";	}
 				else { $update_superuser = "0"; }
 				// SQL query to edit a user
-				$params = [$_REQUEST['username']];
+				$params = [($_REQUEST['username'] ?? null)];
 				$sql_query = "UPDATE users SET `username` = ?";
 				
-				if ($_REQUEST['password']!="") { 
+				if (($_REQUEST['password'] ?? null)!="") { 
 					$sql_query .= ", `password` = ?";
-					$params[] = password_hash($_REQUEST['password'], PASSWORD_DEFAULT);
+					$params[] = password_hash(($_REQUEST['password'] ?? ''), PASSWORD_DEFAULT);
 				}
 				$sql_query .= ", `name` = ?, `email` = ?, `superuser` = ? WHERE id = ?";
-				$params[] = $_REQUEST['name'];
-				$params[] = $_REQUEST['email'];
+				$params[] = ($_REQUEST['name'] ?? null);
+				$params[] = ($_REQUEST['email'] ?? null);
 				$params[] = $update_superuser;
-				$params[] = $_REQUEST['id'];
+				$params[] = ($_REQUEST['id'] ?? null);
 
 				$db->query($sql_query, $params);
 				// Enter in the audit log
 				$audit_data = [
-					'user_id' => $_REQUEST['id'],
-					'username' => $_REQUEST['username'],
-					'name' => $_REQUEST['name'],
-					'email' => $_REQUEST['email'],
+					'user_id' => ($_REQUEST['id'] ?? null),
+					'username' => ($_REQUEST['username'] ?? null),
+					'name' => ($_REQUEST['name'] ?? null),
+					'email' => ($_REQUEST['email'] ?? null),
 					'superuser' => $update_superuser,
-					'password_changed' => $_REQUEST['password'] != "" ? 'yes' : 'no'
+					'password_changed' => ($_REQUEST['password'] ?? null) != "" ? 'yes' : 'no'
 				];
 				$audit_message = createAuditMessage("Updated user", $audit_data);
 				$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'USERS: ' . $audit_message]);
 				header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=edited');
-			} elseif (isset($_REQUEST['what']) && $_REQUEST['what']=="Delete") {
+			} elseif (isset($_REQUEST['what']) && ($_REQUEST['what'] ?? null)=="Delete") {
 				// Get user info before deletion for audit log
-				$user_query = $db->query("SELECT * FROM users WHERE id = ?", [$_REQUEST['id']]);
+				$user_query = $db->query("SELECT * FROM users WHERE id = ?", [($_REQUEST['id'] ?? null)]);
 				$user_info = $db->fetchAssoc($user_query);
 				
 				$sql_query = "DELETE FROM users WHERE id = ?";
-				$db->query($sql_query, [$_REQUEST['id']]);
+				$db->query($sql_query, [($_REQUEST['id'] ?? null)]);
 				// Enter in the audit log
 				$audit_data = [
-					'user_id' => $_REQUEST['id'],
-					'username' => $user_info['username'],
-					'name' => $user_info['name'],
-					'email' => $user_info['email']
+					'user_id' => ($_REQUEST['id'] ?? null),
+					'username' => ($user_info['username'] ?? ''),
+					'name' => ($user_info['name'] ?? ''),
+					'email' => ($user_info['email'] ?? '')
 				];
 				$audit_message = createAuditMessage("Deleted user", $audit_data);
 				$db->query("INSERT INTO audit (`id`, `timestamp`, `who`, `what`) VALUES (NULL, CURRENT_TIMESTAMP, ?, ?)", [$loginuser, 'USERS: ' . $audit_message]);
 				header('Location: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER["HTTP_HOST"] . $_SERVER["PHP_SELF"] . '?func=users&message=deleted');
 			} else {
-				$result = $db->query("SELECT * FROM users WHERE id = ?", [$_REQUEST['id']]);
+				$result = $db->query("SELECT * FROM users WHERE id = ?", [($_REQUEST['id'] ?? null)]);
 				$row = $db->fetchAssoc($result);
+				if (!$row) {
+					echo "<div class=\"alert alert-warning text-center\">User not found.</div>\n";
+					break;
+				}
 				echo "<div class=\"row justify-content-center\">\n";
 				echo "<div class=\"col-lg-8 col-md-10\">\n";
 				echo "<div class=\"card\">\n";
@@ -2547,7 +2551,7 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
     	echo "<h3 class=\"text-primary mb-4\">Audit Log</h3>";
     	
     	// Search functionality
-    	$search = isset($_REQUEST['search']) ? $_REQUEST['search'] : '';
+    	$search = ($_REQUEST['search'] ?? '');
     	echo "<div class=\"row mb-4\">\n";
     	echo "<div class=\"col-md-6\">\n";
     	echo "<form method=\"GET\" action=\"admin.php\" class=\"d-flex\">\n";
@@ -2562,8 +2566,8 @@ switch (isset($_REQUEST["func"]) ? $_REQUEST["func"] : "") {
     	echo "</div>\n";
     	
     	// Pagination logic
-    	if (!isset($_REQUEST['offset']) || $_REQUEST['offset']=="") { $lower=0;
-    	} else { $lower=$_REQUEST['offset']; } 
+    	if (!isset($_REQUEST['offset']) || ($_REQUEST['offset'] ?? null)=="") { $lower=0;
+    	} else { $lower=($_REQUEST['offset'] ?? null); } 
     	$items_per_page = 50; // Reduced from 100 for better readability
     	$upper=($lower+$items_per_page);
     	

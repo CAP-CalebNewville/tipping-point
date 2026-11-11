@@ -107,7 +107,7 @@ if (empty($_REQUEST['tailnumber'])) {
 } else {
 // TAILNUMBER PROVIDED, VALIDATE
 	// GET AIRCRAFT INFORMATION
-	$aircraft_result = $db->query("SELECT * FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+	$aircraft_result = $db->query("SELECT * FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 	$aircraft = $db->fetchAssoc($aircraft_result);
 
 	if (!$aircraft) {

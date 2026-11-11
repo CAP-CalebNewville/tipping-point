@@ -13,22 +13,22 @@ if (!isSystemInstalled()) {
 include_once 'func.inc';
 
 // DEFINE VARIABLES
-$chart_size = (isset($_GET["size"])) ? $_GET["size"] : "large";
+$chart_size = (isset($_GET["size"])) ? ($_GET["size"] ?? null) : "large";
 
-$totarm_to = (isset($_GET["totarm_to"])) ? $_GET["totarm_to"] : "null";
-$totwt_to = (isset($_GET["totwt_to"])) ? $_GET["totwt_to"] : "null";
-$totarm_ldg = (isset($_GET["totarm_ldg"])) ? $_GET["totarm_ldg"] : "null";
-$totwt_ldg = (isset($_GET["totwt_ldg"])) ? $_GET["totwt_ldg"] : "null";
+$totarm_to = (isset($_GET["totarm_to"])) ? ($_GET["totarm_to"] ?? null) : "null";
+$totwt_to = (isset($_GET["totwt_to"])) ? ($_GET["totwt_to"] ?? null) : "null";
+$totarm_ldg = (isset($_GET["totarm_ldg"])) ? ($_GET["totarm_ldg"] ?? null) : "null";
+$totwt_ldg = (isset($_GET["totwt_ldg"])) ? ($_GET["totwt_ldg"] ?? null) : "null";
 
 // GET AIRCRAFT DATA
-$aircraft_result = $db->query("SELECT weight_units, arm_units, max_landing_weight FROM aircraft WHERE id = ?", [$_REQUEST['tailnumber']]);
+$aircraft_result = $db->query("SELECT weight_units, arm_units, max_landing_weight FROM aircraft WHERE id = ?", [($_REQUEST['tailnumber'] ?? null)]);
 $aircraft = $db->fetchAssoc($aircraft_result);
 $weight_units = $aircraft ? $aircraft['weight_units'] : 'Pounds'; // Default to Pounds if not found
 $arm_units = $aircraft ? $aircraft['arm_units'] : 'Inches'; // Default to Inches if not found
 $max_landing_weight = $aircraft ? $aircraft['max_landing_weight'] : null;
 
 // GET AIRCRAFT CG ENVELOPE DATA
-$envelope_name = isset($_GET['envelope']) ? $_GET['envelope'] : null;
+$envelope_name = ($_GET['envelope'] ?? null);
 $envelopes_data = [];
 
 // Check if envelope_name column exists for backward compatibility
@@ -37,7 +37,7 @@ $has_envelope_columns = $db->hasColumn('aircraft_cg', 'envelope_name');
 if ($has_envelope_columns) {
 	if ($envelope_name) {
 		// Single envelope mode (from admin.php) - show only specified envelope
-		$result = $db->query("SELECT * FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ? ORDER BY id", [$_REQUEST['tailnumber'], $envelope_name]);
+		$result = $db->query("SELECT * FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ? ORDER BY id", [($_REQUEST['tailnumber'] ?? null), $envelope_name]);
 		$envelope_points = [];
 		$envelope_color = 'blue';
 		
@@ -61,10 +61,10 @@ if ($has_envelope_columns) {
 		}
 	} else {
 		// Multiple envelope mode (from index.php) - show all envelopes
-		$envelope_result = $db->query("SELECT DISTINCT envelope_name, color FROM aircraft_cg WHERE tailnumber = ? ORDER BY envelope_name", [$_REQUEST['tailnumber']]);
+		$envelope_result = $db->query("SELECT DISTINCT envelope_name, color FROM aircraft_cg WHERE tailnumber = ? ORDER BY envelope_name", [($_REQUEST['tailnumber'] ?? null)]);
 		
 		while ($envelope = $db->fetchAssoc($envelope_result)) {
-			$result = $db->query("SELECT * FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ? ORDER BY id", [$_REQUEST['tailnumber'], $envelope['envelope_name']]);
+			$result = $db->query("SELECT * FROM aircraft_cg WHERE tailnumber = ? AND envelope_name = ? ORDER BY id", [($_REQUEST['tailnumber'] ?? null), $envelope['envelope_name']]);
 			$envelope_points = [];
 			
 			while($row = $db->fetchAssoc($result)) {
@@ -86,7 +86,7 @@ if ($has_envelope_columns) {
 	}
 } else {
 	// Fallback for old database structure - single envelope
-	$result = $db->query("SELECT * FROM aircraft_cg WHERE tailnumber = ? ORDER BY id", [$_REQUEST['tailnumber']]);
+	$result = $db->query("SELECT * FROM aircraft_cg WHERE tailnumber = ? ORDER BY id", [($_REQUEST['tailnumber'] ?? null)]);
 	$envelope_points = [];
 	
 	while($row = $db->fetchAssoc($result)) {
